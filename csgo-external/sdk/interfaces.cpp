@@ -28,7 +28,7 @@ namespace sdk {
 		// look for the interface
 		for (const auto& [name, addr] : interfaces->second) {
 			if (!name.compare(0, name.size() - 3, interface_name)) {
-				mango::logger.info("Interface found: ", module_name, ":", name, ":0x", std::hex, std::uppercase, addr);
+				mango::logger.success("Interface found: ", module_name, ":", name, ":0x", std::hex, std::uppercase, addr);
 				return addr;
 			}
 		}
@@ -44,8 +44,10 @@ namespace sdk {
 			return 0;
 
 		// look for the interface
-		if (const auto& mod = interfaces->second.find(interface_name); mod != interfaces->second.end())
+		if (const auto& mod = interfaces->second.find(interface_name); mod != interfaces->second.end()) {
+			mango::logger.success("Interface found: ", module_name, ":", interface_name, ":0x", std::hex, std::uppercase, mod->second);
 			return mod->second;
+		}
 
 		return 0;
 	}

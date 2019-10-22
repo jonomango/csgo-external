@@ -4,7 +4,7 @@
 #include <misc/logger.h>
 #include <misc/error_codes.h>
 
-#include "sdk/interfaces.h"
+#include "sdk/constants.h"
 
 
 // setup logger channels
@@ -34,7 +34,7 @@ void setup_logger() {
 		display_info(FOREGROUND_RED, "error", std::move(ss));
 	});
 
-	mango::logger.success("Logger channels initialized.");
+	mango::logger.success("Logging channels initialized.");
 }
 
 // just a big try-catch block :P
@@ -73,26 +73,17 @@ int main() {
 
 		// setup process
 		mango::logger.info("Setting up process...");
-		mango::Process process(process_id, options);
-		mango::logger.success("Process initialized: ", process.get_name());
+		sdk::globals::process.setup(process_id, options);
+		mango::logger.success("Process initialized: ", sdk::globals::process.get_name());
 
-		// get interfaces
-		sdk::InterfaceCache interface_cache(process);
-		const auto client_interface = interface_cache.get_interface("client_panorama.dll", "VClient");
-		const auto engine_interface = interface_cache.get_interface("engine.dll", "VEngineClient");
+		// this does a lot of setup stuff (mostly so we dont have to use pattern scanning and poopoo)
+		sdk::setup_constants();
 
-		const auto ret_value = process.alloc_virt_mem(4);
-
-		mango::Shellcode(
-			"\xB9", engine_interface, // mov ecx, engine_interface
-			"\xB8", process.get_vfunc<uint32_t>(engine_interface, 12), // mov eax, vfunc(engine, 12)
-			"\xFF\xD0", // call eax
-			"\xA3", uint32_t(ret_value), // mov [ret_value], eax
-			"\xC3" // ret
-		).execute(process);
-
-		mango::logger.info("localplayer index: ", process.read<int>(ret_value));
-		process.free_virt_mem(ret_value);
+		// example
+		const auto local_player = sdk::globals::client_entity_list.get_local_player();
+		while (!GetAsyncKeyState(VK_INSERT)) {
+			mango::logger.info(local_player.get_health());
+		}
 	});
 
 	mango::logger.info("Program ended.");

@@ -147,10 +147,20 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="sdk\classes\client.cpp" />
+    <ClCompile Include="sdk\classes\engine_client.cpp" />
+    <ClCompile Include="sdk\classes\base_entity.cpp" />
+    <ClCompile Include="sdk\constants.cpp" />
     <ClCompile Include="sdk\interfaces.cpp" />
+    <ClCompile Include="sdk\classes\client_entity_list.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="sdk\classes\client.h" />
+    <ClInclude Include="sdk\classes\client_entity_list.h" />
+    <ClInclude Include="sdk\classes\engine_client.h" />
+    <ClInclude Include="sdk\classes\base_entity.h" />
     <ClInclude Include="sdk\interfaces.h" />
+    <ClInclude Include="sdk\constants.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
