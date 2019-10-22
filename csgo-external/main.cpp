@@ -1,7 +1,10 @@
 #include <epic/process.h>
+#include <epic/shellcode.h>
 
 #include <misc/logger.h>
 #include <misc/error_codes.h>
+
+#include "sdk/interfaces.h"
 
 
 // setup logger channels
@@ -31,12 +34,12 @@ void setup_logger() {
 		display_info(FOREGROUND_RED, "error", std::move(ss));
 	});
 
-	mango::logger.success("Setup logger channels.");
+	mango::logger.success("Logger channels initialized.");
 }
 
 // just a big try-catch block :P
 template <typename Callable>
-void surround_try(Callable&& callable) {
+void surround_try_block(Callable&& callable) {
 	try {
 		std::invoke(callable);
 	} catch (mango::MangoError & e) {
@@ -51,7 +54,7 @@ void surround_try(Callable&& callable) {
 int main() {
 	setup_logger();
 
-	surround_try([]() {
+	surround_try_block([]() {
 		// get window
 		const auto csgo_hwnd = FindWindow(nullptr, "Counter-Strike: Global Offensive");
 		if (!csgo_hwnd)
@@ -66,49 +69,30 @@ int main() {
 
 		// options for setting up the process
 		mango::Process::SetupOptions options;
-		options.m_defer_module_loading = true;
+		options.m_defer_module_loading = false;
 
 		// setup process
+		mango::logger.info("Setting up process...");
 		mango::Process process(process_id, options);
-
-		mango::logger.success("Setup process: ", process.get_name());
+		mango::logger.success("Process initialized: ", process.get_name());
 
 		// get interfaces
-		const auto dump_interfaces = [&](const std::string& module_name) {
-			const auto create_interface = uint32_t(process.get_proc_addr(module_name, "CreateInterface"));
-			if (!create_interface)
-				throw std::runtime_error("Failed to get CreateInterface for " + module_name);
+		sdk::InterfaceCache interface_cache(process);
+		const auto client_interface = interface_cache.get_interface("client_panorama.dll", "VClient");
+		const auto engine_interface = interface_cache.get_interface("engine.dll", "VEngineClient");
 
-			// follow the jmp in CreateInterface to get this (or just CreateInterface - 0x70)
-			const auto create_interface_internal = create_interface + process.read<uint32_t>(create_interface + 0x5) + 0x9;
+		const auto ret_value = process.alloc_virt_mem(4);
 
-			// linked list
-			struct InterfaceReg {
-				uint32_t m_create_fn;
-				uint32_t m_name;
-				uint32_t m_next;
-			};
+		mango::Shellcode(
+			"\xB9", engine_interface, // mov ecx, engine_interface
+			"\xB8", process.get_vfunc<uint32_t>(engine_interface, 12), // mov eax, vfunc(engine, 12)
+			"\xFF\xD0", // call eax
+			"\xA3", uint32_t(ret_value), // mov [ret_value], eax
+			"\xC3" // ret
+		).execute(process);
 
-			// mov esi, interface_list
-			auto curr_interface_ptr = process.read<uint32_t>(process.read<uint32_t>(create_interface_internal + 0x6));
-
-			// traverse the linked list of interfaces
-			while (curr_interface_ptr) {
-				const auto iface = process.read<InterfaceReg>(curr_interface_ptr);
-
-				// read the name
-				char name[128];
-				process.read(iface.m_name, name, 128);
-				mango::logger.info(name);
-
-				curr_interface_ptr = iface.m_next;
-			}
-		};
-
-		//dump_interfaces("engine.dll");
-
-		dump_interfaces("client_panorama.dll");
-		// get netvars
+		mango::logger.info("localplayer index: ", process.read<int>(ret_value));
+		process.free_virt_mem(ret_value);
 	});
 
 	mango::logger.info("Program ended.");
