@@ -150,17 +150,19 @@
     <ClCompile Include="sdk\classes\client.cpp" />
     <ClCompile Include="sdk\classes\engine_client.cpp" />
     <ClCompile Include="sdk\classes\base_entity.cpp" />
-    <ClCompile Include="sdk\constants.cpp" />
-    <ClCompile Include="sdk\interfaces.cpp" />
+    <ClCompile Include="sdk\misc\constants.cpp" />
+    <ClCompile Include="sdk\misc\interface_cache.cpp" />
     <ClCompile Include="sdk\classes\client_entity_list.cpp" />
+    <ClCompile Include="sdk\misc\netvar_cache.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="sdk\classes\client.h" />
     <ClInclude Include="sdk\classes\client_entity_list.h" />
     <ClInclude Include="sdk\classes\engine_client.h" />
     <ClInclude Include="sdk\classes\base_entity.h" />
-    <ClInclude Include="sdk\interfaces.h" />
-    <ClInclude Include="sdk\constants.h" />
+    <ClInclude Include="sdk\misc\interface_cache.h" />
+    <ClInclude Include="sdk\misc\constants.h" />
+    <ClInclude Include="sdk\misc\netvar_cache.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

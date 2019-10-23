@@ -1,4 +1,4 @@
-#include "interfaces.h"
+#include "interface_cache.h"
 
 #include <misc/logger.h>
 #include <misc/error_codes.h>
@@ -19,7 +19,7 @@ namespace sdk {
 	}
 
 	// get an interface without the version at the end: get_interface("ModuleName", "InterfaceName")
-	uint32_t InterfaceCache::get_interface(const std::string& module_name, const std::string& interface_name) const noexcept {
+	uint32_t InterfaceCache::get(const std::string& module_name, const std::string& interface_name) const noexcept {
 		// get the interfaces for the module
 		const auto& interfaces = this->m_interfaces.find(module_name);
 		if (interfaces == this->m_interfaces.end())
@@ -28,7 +28,7 @@ namespace sdk {
 		// look for the interface
 		for (const auto& [name, addr] : interfaces->second) {
 			if (!name.compare(0, name.size() - 3, interface_name)) {
-				mango::logger.success("Interface found: ", module_name, ":", name, ":0x", std::hex, std::uppercase, addr);
+				mango::logger.info("Interface found: ", module_name, ":", name, ":0x", std::hex, std::uppercase, addr);
 				return addr;
 			}
 		}
@@ -37,7 +37,7 @@ namespace sdk {
 	}
 
 	// get an interface with the version at the end: get_interface("ModuleName", "InterfaceNameXXX")
-	uint32_t InterfaceCache::get_interface_ex(const std::string& module_name, const std::string& interface_name) const noexcept {
+	uint32_t InterfaceCache::get_version(const std::string& module_name, const std::string& interface_name) const noexcept {
 		// get the interfaces for the module
 		const auto& interfaces = this->m_interfaces.find(module_name);
 		if (interfaces == this->m_interfaces.end())
@@ -45,7 +45,7 @@ namespace sdk {
 
 		// look for the interface
 		if (const auto& mod = interfaces->second.find(interface_name); mod != interfaces->second.end()) {
-			mango::logger.success("Interface found: ", module_name, ":", interface_name, ":0x", std::hex, std::uppercase, mod->second);
+			mango::logger.info("Interface found: ", module_name, ":", interface_name, ":0x", std::hex, std::uppercase, mod->second);
 			return mod->second;
 		}
 

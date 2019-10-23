@@ -1,6 +1,6 @@
 #include "base_entity.h"
 
-#include "../constants.h"
+#include "../misc/constants.h"
 
 
 namespace sdk {

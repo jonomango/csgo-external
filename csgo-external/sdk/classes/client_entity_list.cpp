@@ -1,6 +1,6 @@
 #include "client_entity_list.h"
 
-#include "../constants.h"
+#include "../misc/constants.h"
 
 
 namespace sdk {
@@ -15,6 +15,6 @@ namespace sdk {
 	// get localplayer entity 
 	// all it does is call get_entity() with EngineClient::get_local_player_index()
 	BaseEntity ClientEntityList::get_local_player() const {
-		return this->get_entity(globals::engine_client.get_local_player_index());
+		return this->get_entity(globals::engine_client.get_local_player());
 	}
 } // namespace sdk

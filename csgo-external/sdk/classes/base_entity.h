@@ -12,10 +12,11 @@ namespace sdk {
 		// get the underlying address
 		operator uint32_t() const noexcept { return this->m_address; }
 
+	public:
 		// get entity health
 		int32_t get_health() const;
 
 	private:
-		const uint32_t m_address;
+		uint32_t m_address = 0;
 	};
 } // namespace sdk

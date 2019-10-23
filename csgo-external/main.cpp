@@ -2,9 +2,10 @@
 #include <epic/shellcode.h>
 
 #include <misc/logger.h>
+#include <misc/vector.h>
 #include <misc/error_codes.h>
 
-#include "sdk/constants.h"
+#include "sdk/misc/constants.h"
 
 
 // setup logger channels
@@ -76,13 +77,14 @@ int main() {
 		sdk::globals::process.setup(process_id, options);
 		mango::logger.success("Process initialized: ", sdk::globals::process.get_name());
 
-		// this does a lot of setup stuff (mostly so we dont have to use pattern scanning and poopoo)
+		// gets interfaces and stuffs and shibs
 		sdk::setup_constants();
 
-		// example
-		const auto local_player = sdk::globals::client_entity_list.get_local_player();
-		while (!GetAsyncKeyState(VK_INSERT)) {
-			mango::logger.info(local_player.get_health());
+		// cool stuffs
+		while (sdk::globals::engine_client.is_in_game()) {
+			const auto local_player = sdk::globals::client_entity_list.get_local_player();
+
+			sdk::globals::engine_client.set_view_angles({ 0.f, 0.f, 0.f });
 		}
 	});
 

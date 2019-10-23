@@ -14,6 +14,7 @@ namespace sdk {
 		// get the underlying address
 		operator uint32_t() const noexcept { return this->m_address; }
 
+	public:
 		// get an entity from their index
 		BaseEntity get_entity(uint32_t index) const;
 
@@ -22,6 +23,6 @@ namespace sdk {
 		BaseEntity get_local_player() const;
 
 	private:
-		uint32_t m_address;
+		uint32_t m_address = 0;
 	};
 } // namespace sdk
