@@ -43,10 +43,10 @@ template <typename Callable>
 void surround_try_block(Callable&& callable) {
 	try {
 		std::invoke(callable);
-	} catch (mango::MangoError & e) {
-		mango::logger.error("Unhandled MangoError: ", e.what());
-	} catch (std::exception & e) {
-		mango::logger.error("Unhandled exception: ", e.what());
+	} catch (mango::MangoError& e) {
+		mango::logger.error(e.what());
+	} catch (std::exception& e) {
+		mango::logger.error(e.what());
 	} catch (...) {
 		mango::logger.error("Unhandled exception");
 	}
@@ -81,10 +81,18 @@ int main() {
 		sdk::setup_constants();
 
 		// cool stuffs
-		while (sdk::globals::engine_client.is_in_game()) {
-			const auto local_player = sdk::globals::client_entity_list.get_local_player();
+		while (true) {
+			// update local_player every time we switch servers
+			const auto local_player = sdk::interfaces::client_entity_list.get_local_player();
+			if (!local_player)
+				continue;
 
-			sdk::globals::engine_client.set_view_angles({ 0.f, 0.f, 0.f });
+			// we're in game-- lets do some shib
+			while (sdk::interfaces::engine_client.is_in_game()) {
+				sdk::interfaces::engine_client.set_view_angles({ 0.f, 0.f, 0.f });
+
+				mango::logger.info(local_player.get_health());
+			}
 		}
 	});
 

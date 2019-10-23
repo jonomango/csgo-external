@@ -160,6 +160,7 @@
     <ClInclude Include="sdk\classes\client_entity_list.h" />
     <ClInclude Include="sdk\classes\engine_client.h" />
     <ClInclude Include="sdk\classes\base_entity.h" />
+    <ClInclude Include="sdk\classes\defines.h" />
     <ClInclude Include="sdk\misc\interface_cache.h" />
     <ClInclude Include="sdk\misc\constants.h" />
     <ClInclude Include="sdk\misc\netvar_cache.h" />

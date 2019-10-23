@@ -62,5 +62,8 @@
     <ClInclude Include="sdk\misc\netvar_cache.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="sdk\classes\defines.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

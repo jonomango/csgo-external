@@ -19,7 +19,7 @@ namespace sdk {
 		BaseEntity get_entity(uint32_t index) const;
 
 		// get localplayer entity 
-		// all it does is call get_entity() with EngineClient::get_local_player_index()
+		// all this does is call get_entity() with EngineClient::get_local_player_index()
 		BaseEntity get_local_player() const;
 
 	private:
