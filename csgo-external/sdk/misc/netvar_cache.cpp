@@ -3,6 +3,8 @@
 #include "../misc/constants.h"
 #include "../classes/defines.h"
 
+#include <crypto/encrypted_string.h>
+
 
 namespace sdk {
 	// cache netvars for later use
@@ -22,17 +24,14 @@ namespace sdk {
 
 	// get a netvar by table and prop name
 	uint32_t NetvarCache::get(const std::string& table, const std::string& prop) const {
-		const auto& props = this->m_netvars.find(table);
-		if (props == this->m_netvars.end())
-			throw std::runtime_error("Failed to get netvar: " + table + ":" + prop);
-
-		// woohoo we found the netvar
-		if (const auto& it = props->second.find(prop); it != props->second.end()) {
-			mango::logger.success("Found netvar: ", table, ":", prop, ":0x", std::hex, std::uppercase, it->second);
-			return it->second;
+		if (const auto& props = this->m_netvars.find(table); props != this->m_netvars.end()) {
+			// woohoo we found the netvar
+			if (const auto& it = props->second.find(prop); it != props->second.end())
+				return it->second;
 		}
 
-		throw std::runtime_error("Failed to get netvar: " + table + ":" + prop);
+		// aw shid
+		throw std::runtime_error(encrypt_string("failed to find netvar: ") + table + ':' + prop);
 	}
 
 	// recursively parse a RecvTable

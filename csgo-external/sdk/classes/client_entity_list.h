@@ -2,27 +2,19 @@
 
 #include <stdint.h>
 
+#include "../misc/interface_base.h"
 #include "base_entity.h"
 
 
 namespace sdk {
-	class ClientEntityList {
-	public:
-		ClientEntityList() = default;
-		explicit ClientEntityList(const uint32_t address) : m_address(address) {}
-
-		// get the underlying address
-		operator uint32_t() const noexcept { return this->m_address; }
-
+	class ClientEntityList : public InterfaceBase<ClientEntityList,
+		mango::fnv1a<uint64_t>("client_panorama.dll:VClientEntityList")> {
 	public:
 		// get an entity from their index
-		BaseEntity get_entity(uint32_t index) const;
+		BaseEntity get_entity(int index) const;
 
 		// get localplayer entity 
 		// all this does is call get_entity() with EngineClient::get_local_player_index()
 		BaseEntity get_local_player() const;
-
-	private:
-		uint32_t m_address = 0;
 	};
 } // namespace sdk

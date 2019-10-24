@@ -42,11 +42,8 @@ namespace sdk {
 	public:
 		uint32_t m_name;
 		uint32_t m_type;
-		uint32_t m_flags;
-		uint32_t m_string_buffer_size;
-		bool m_in_array;
 	private:
-		uint8_t _padding1[0x14];
+		uint8_t _padding1[0x1D];
 	public:
 		uint32_t m_recv_table; // RecvTable*
 		uint32_t m_offset;

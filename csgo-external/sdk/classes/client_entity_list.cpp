@@ -5,7 +5,7 @@
 
 namespace sdk {
 	// get an entity from their index
-	BaseEntity ClientEntityList::get_entity(uint32_t index) const {
+	BaseEntity ClientEntityList::get_entity(int index) const {
 		// ref @GetClientEntity
 		index += 0x0FFFFDFFF;
 		const auto address = interfaces::client_entity_list + (index + index) * 0x8;

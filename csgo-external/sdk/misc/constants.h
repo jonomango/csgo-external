@@ -31,6 +31,13 @@ namespace sdk {
 	} // namespace offsets
 	namespace netvars { // these are dynamic
 		inline uint32_t m_iHealth;
+		inline uint32_t m_fFlags;
+		inline uint32_t m_bSpotted;
+		inline uint32_t m_iTeamNum;
+		inline uint32_t m_vecOrigin;
+		inline uint32_t m_angEyeAngles;
+		inline uint32_t m_bGunGameImmunity;
+		inline uint32_t m_flFlashDuration;
 	}
 	namespace indices { 
 		const inline uint32_t get_local_player_index = 12;

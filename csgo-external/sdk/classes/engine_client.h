@@ -4,17 +4,13 @@
 
 #include <misc/vector.h>
 
+#include "../misc/interface_base.h"
+
 
 namespace sdk {
 	// https://github.com/VSES/SourceEngine2007/blob/master/se2007/engine/cdll_engine_int.cpp
-	class EngineClient {
-	public:
-		EngineClient() = default;
-		explicit EngineClient(const uint32_t address) : m_address(address) {}
-
-		// get the underlying address
-		operator uint32_t() const noexcept { return this->m_address; }
-
+	class EngineClient : public InterfaceBase<EngineClient,
+		mango::fnv1a<uint64_t>("engine.dll:VEngineClient")> {
 	public:
 		// get localplayer index
 		uint32_t get_local_player() const;
@@ -27,8 +23,5 @@ namespace sdk {
 
 		// set the localplayer viewangles
 		void set_view_angles(const mango::vec3f& angles) const;
-
-	private:
-		uint32_t m_address = 0;
 	};
 } // namespace sdk

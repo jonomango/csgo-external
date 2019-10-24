@@ -5,6 +5,8 @@
 
 #include "../classes/client_entity_list.h"
 
+#include <crypto/fnv_hash.h>
+
 
 namespace sdk {
 	void setup_constants() {
@@ -12,10 +14,12 @@ namespace sdk {
 		InterfaceCache interface_cache;
 		interface_cache.setup();
 
-		// get interfaces
-		interfaces::client = Client(interface_cache.get("client_panorama.dll", "VClient"));
-		interfaces::engine_client = EngineClient(interface_cache.get("engine.dll", "VEngineClient"));
-		interfaces::client_entity_list = ClientEntityList(interface_cache.get("client_panorama.dll", "VClientEntityList"));
+		// set interfaces
+		interfaces::client = Client::create(interface_cache);
+		interfaces::engine_client = EngineClient::create(interface_cache);
+		interfaces::client_entity_list = ClientEntityList::create(interface_cache);
+
+		mango::logger.success("Found interfaces.");
 
 		// @GetLocalPlayerIndex
 		const auto get_local_player_index = globals::process.get_vfunc<uint32_t>(
@@ -48,6 +52,17 @@ namespace sdk {
 		NetvarCache netvar_cache;
 		netvar_cache.setup();
 
+		// set netvars
 		netvars::m_iHealth = netvar_cache.get("DT_BasePlayer", "m_iHealth");
+		netvars::m_fFlags = netvar_cache.get("DT_BasePlayer", "m_fFlags");
+		netvars::m_bSpotted = netvar_cache.get("DT_BaseEntity", "m_bSpotted");
+		netvars::m_iTeamNum = netvar_cache.get("DT_BaseEntity", "m_iTeamNum");
+		netvars::m_vecOrigin = netvar_cache.get("DT_BaseEntity", "m_vecOrigin");
+		netvars::m_angEyeAngles = netvar_cache.get("DT_CSPlayer", "m_angEyeAngles");
+		netvars::m_bGunGameImmunity = netvar_cache.get("DT_CSPlayer", "m_bGunGameImmunity");
+		netvars::m_flFlashDuration = netvar_cache.get("DT_CSPlayer", "m_flFlashDuration");
+		netvars::m_flFlashDuration = netvar_cache.get("DT_CsPlayer", "m_flFlashDuration");
+
+		mango::logger.success("Found netvars.");
 	}
 } // namespace sdk
