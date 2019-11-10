@@ -10,9 +10,9 @@ namespace sdk {
 	class InterfaceBase {
 	public:
 		static Interface create(const InterfaceCache& cache) {
-			Interface iface;
-			iface.m_address = cache.get({ InterfaceHash, InterfaceVersion });
-			return iface;
+			Interface created_interface;
+			created_interface.m_address = cache.get({ InterfaceHash, InterfaceVersion });
+			return created_interface;
 		}
 
 		// get the underlying address

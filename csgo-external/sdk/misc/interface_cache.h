@@ -25,8 +25,8 @@ namespace sdk {
 		};
 
 		struct InterfaceIDHash {
-			size_t operator()(const sdk::InterfaceCache::InterfaceID& key) const noexcept {
-				return key.m_hash ^ (std::hash<int>()(key.m_version) << 1);
+			uint64_t operator()(const sdk::InterfaceCache::InterfaceID& key) const noexcept {
+				return key.m_hash ^ (std::hash<uint64_t>()(key.m_version) << 1);
 			}
 		};
 
@@ -34,7 +34,7 @@ namespace sdk {
 		InterfaceCache() = default;
 
 		// cache all interfaces
-		void setup();
+		void cache();
 
 		// get an interface: InterfaceCache::get(InterfaceID(fnv1a<uint64_t>("ModuleName:InterfaceName"), OptionalVersionNum))
 		uint32_t get(const InterfaceID interface_id) const;

@@ -71,19 +71,19 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <IncludePath>C:\Users\realj\OneDrive\Programming\c++\mango-library\mango-library\include;$(IncludePath)</IncludePath>
-    <LibraryPath>C:\Users\realj\OneDrive\Programming\c++\mango-library\output\Debug;$(LibraryPath)</LibraryPath>
+    <LibraryPath>C:\Users\realj\OneDrive\Programming\c++\mango-library\output\$(Configuration)\;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <IncludePath>C:\Users\realj\OneDrive\Programming\c++\mango-library\mango-library\include;$(IncludePath)</IncludePath>
-    <LibraryPath>C:\Users\realj\OneDrive\Programming\c++\mango-library\output\Release;$(LibraryPath)</LibraryPath>
+    <LibraryPath>C:\Users\realj\OneDrive\Programming\c++\mango-library\output\$(Configuration)\;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <IncludePath>C:\Users\realj\OneDrive\Programming\c++\mango-library\mango-library\include;$(IncludePath)</IncludePath>
-    <LibraryPath>C:\Users\realj\OneDrive\Programming\c++\mango-library\output\Debug;$(LibraryPath)</LibraryPath>
+    <LibraryPath>C:\Users\realj\OneDrive\Programming\c++\mango-library\output\$(Configuration)\;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <IncludePath>C:\Users\realj\OneDrive\Programming\c++\mango-library\mango-library\include;$(IncludePath)</IncludePath>
-    <LibraryPath>C:\Users\realj\OneDrive\Programming\c++\mango-library\output\Release;$(LibraryPath)</LibraryPath>
+    <LibraryPath>C:\Users\realj\OneDrive\Programming\c++\mango-library\output\$(Configuration)\;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -96,7 +96,7 @@
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
-      <AdditionalDependencies>mango-library-x86.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>mango-library-$(PlatformTarget).lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -110,7 +110,7 @@
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
-      <AdditionalDependencies>mango-library-x64.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>mango-library-$(PlatformTarget).lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -128,8 +128,8 @@
       <SubSystem>Console</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>mango-library-x86.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateDebugInformation>false</GenerateDebugInformation>
+      <AdditionalDependencies>mango-library-$(PlatformTarget).lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -147,26 +147,28 @@
       <SubSystem>Console</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>mango-library-x64.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateDebugInformation>false</GenerateDebugInformation>
+      <AdditionalDependencies>mango-library-$(PlatformTarget).lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="sdk\classes\base_entity.cpp" />
     <ClCompile Include="sdk\classes\client.cpp" />
     <ClCompile Include="sdk\classes\engine_client.cpp" />
-    <ClCompile Include="sdk\classes\base_entity.cpp" />
     <ClCompile Include="sdk\misc\constants.cpp" />
+    <ClCompile Include="sdk\misc\datamap_cache.cpp" />
     <ClCompile Include="sdk\misc\interface_cache.cpp" />
     <ClCompile Include="sdk\classes\client_entity_list.cpp" />
     <ClCompile Include="sdk\misc\netvar_cache.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="sdk\classes\base_entity.h" />
     <ClInclude Include="sdk\classes\client.h" />
     <ClInclude Include="sdk\classes\client_entity_list.h" />
     <ClInclude Include="sdk\classes\engine_client.h" />
-    <ClInclude Include="sdk\classes\base_entity.h" />
     <ClInclude Include="sdk\classes\defines.h" />
+    <ClInclude Include="sdk\misc\datamap_cache.h" />
     <ClInclude Include="sdk\misc\interface_base.h" />
     <ClInclude Include="sdk\misc\interface_cache.h" />
     <ClInclude Include="sdk\misc\constants.h" />

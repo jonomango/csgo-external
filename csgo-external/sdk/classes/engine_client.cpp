@@ -5,9 +5,9 @@
 
 namespace sdk {
 	// get localplayer index
-	uint32_t EngineClient::get_local_player() const {
+	int EngineClient::get_local_player() const {
 		// ref @GetLocalPlayerIndex
-		return globals::process.read<uint32_t>(globals::client_state + 
+		return globals::process.read<int>(globals::client_state + 
 			offsets::client_state_local_player_index) + 1;
 	}
 
@@ -19,14 +19,14 @@ namespace sdk {
 	}
 
 	// get the localplayer viewangles
-	mango::vec3f EngineClient::get_view_angles() const {
+	mango::Vec3f EngineClient::get_view_angles() const {
 		// ref @GetViewAngles
-		return globals::process.read<mango::vec3f>(globals::client_state +
+		return globals::process.read<mango::Vec3f>(globals::client_state +
 			offsets::client_state_view_angles);
 	}
 
 	// set the localplayer viewangles
-	void EngineClient::set_view_angles(const mango::vec3f& angles) const {
+	void EngineClient::set_view_angles(const mango::Vec3f& angles) const {
 		// ref @GetViewAngles
 		globals::process.write(globals::client_state + 
 			offsets::client_state_view_angles, angles);

@@ -28,8 +28,8 @@ namespace sdk {
 		// https://github.com/VSES/SourceEngine2007/blob/43a5c90a5ada1e69ca044595383be67f40b33c61/se2007/engine/baseclientstate.h
 		// https://github.com/VSES/SourceEngine2007/blob/43a5c90a5ada1e69ca044595383be67f40b33c61/src_main/common/protocol.h
 		inline uint32_t client_state_signon_state;
-	} // namespace offsets
-	namespace netvars { // these are dynamic
+
+		// netvars
 		inline uint32_t m_iHealth;
 		inline uint32_t m_fFlags;
 		inline uint32_t m_bSpotted;
@@ -38,7 +38,13 @@ namespace sdk {
 		inline uint32_t m_angEyeAngles;
 		inline uint32_t m_bGunGameImmunity;
 		inline uint32_t m_flFlashDuration;
-	}
+
+		// datamap
+
+		// HARDCODED
+		const inline uint32_t m_bDormant = 0xED;
+
+	} // namespace offsets
 	namespace indices { 
 		const inline uint32_t get_local_player_index = 12;
 		const inline uint32_t get_client_entity = 3;

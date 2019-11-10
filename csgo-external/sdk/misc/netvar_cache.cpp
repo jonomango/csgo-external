@@ -3,12 +3,12 @@
 #include "../misc/constants.h"
 #include "../classes/defines.h"
 
-#include <crypto/encrypted_string.h>
+#include <crypto/string_encryption.h>
 
 
 namespace sdk {
 	// cache netvars for later use
-	void NetvarCache::setup() {
+	void NetvarCache::cache() {
 		// iterate over all client classes
 		auto client_class_addr = interfaces::client.get_all_classes();
 		while (client_class_addr) {
@@ -22,16 +22,13 @@ namespace sdk {
 		}
 	}
 
-	// get a netvar by table and prop name
-	uint32_t NetvarCache::get(const std::string& table, const std::string& prop) const {
-		if (const auto& props = this->m_netvars.find(table); props != this->m_netvars.end()) {
-			// woohoo we found the netvar
-			if (const auto& it = props->second.find(prop); it != props->second.end())
-				return it->second;
-		}
+	// get a netvar by table and prop name hash: fnv1a("table:prop")
+	uint32_t NetvarCache::get(const uint64_t hash) const {
+		if (const auto& it = this->m_netvars.find(hash); it != this->m_netvars.end())
+			return it->second;
 
 		// aw shid
-		throw std::runtime_error(encrypt_string("failed to find netvar: ") + table + ':' + prop);
+		throw std::runtime_error(enc_str("failed to find netvar: ") + std::to_string(hash));
 	}
 
 	// recursively parse a RecvTable
@@ -61,7 +58,8 @@ namespace sdk {
 				continue;
 			}
 
-			m_netvars[table_name][prop_name] = prop.m_offset;
+			const auto hash = mango::fnv1a<uint64_t>((std::string(table_name) + ":" + prop_name).c_str());
+			this->m_netvars[hash] = prop.m_offset;
 		}
 	}
 } // namespace sdk

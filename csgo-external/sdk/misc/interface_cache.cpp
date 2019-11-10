@@ -3,7 +3,7 @@
 #include "constants.h"
 
 #include <crypto/fnv_hash.h>
-#include <crypto/encrypted_string.h>
+#include <crypto/string_encryption.h>
 
 #include <misc/logger.h>
 #include <misc/error_codes.h>
@@ -14,13 +14,10 @@
 
 namespace sdk {
 	// cache all interfaces
-	void InterfaceCache::setup() {
+	void InterfaceCache::cache() {
 		// cache interfaces for each module
-		for (const auto& [name, _] : globals::process.get_modules()) {
-			try {
-				this->cache_interfaces(name);
-			} catch (mango::FailedToReadMemory&) {}
-		}
+		for (const auto& [name, _] : globals::process.get_modules())
+			this->cache_interfaces(name);
 	}
 
 	// get an interface: InterfaceCache::get(InterfaceID(fnv1a<uint64_t>("ModuleName:InterfaceName"), OptionalVersionNum))
@@ -32,16 +29,22 @@ namespace sdk {
 		}
 
 		// aw shid
-		throw std::runtime_error(encrypt_string("failed to find interface: ") + std::to_string(interface_id.m_hash));
+		throw std::runtime_error(enc_str("failed to find interface: ") + std::to_string(interface_id.m_hash));
 	}
 
 	// cache all interfaces for a module
 	void InterfaceCache::cache_interfaces(const std::string& module_name) {
-		const auto create_interface_addr = uint32_t(globals::process.get_proc_addr(module_name, "CreateInterface"));
+		const auto create_interface_addr = uint32_t(globals::process.get_proc_addr(module_name, enc_str("CreateInterface")));
 		if (!create_interface_addr)
 			return;
 
-		// follow the jmp in CreateInterface to get this (or just CreateInterface - 0x70)
+		// 55                      push    ebp
+		// 8B EC                   mov     ebp, esp
+		// 5D                      pop     ebp
+		if (globals::process.read<uint32_t>(create_interface_addr) != 0x5DEC8B55)
+			return;
+
+		// jmp create_interface_internal
 		const auto create_interface_internal_addr = create_interface_addr +
 			globals::process.read<uint32_t>(create_interface_addr + 0x5) + 0x9;
 

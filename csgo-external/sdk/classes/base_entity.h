@@ -1,11 +1,11 @@
 #pragma once
 
 #include <stdint.h>
-
 #include <misc/vector.h>
 
 
 namespace sdk {
+	// https://github.com/ValveSoftware/source-sdk-2013/blob/master/sp/src/game/client/c_baseentity.h#L174
 	class BaseEntity {
 	public:
 		BaseEntity() = default;
@@ -23,21 +23,25 @@ namespace sdk {
 
 		// if we can see this entity or not (updates slowly)
 		bool is_spotted() const;
+		void set_spotted(const bool value) const;
 
 		// get an entity's team number
 		int get_team() const;
 
 		// get an entity's origin position
-		mango::vec3f get_origin() const;
+		mango::Vec3f get_origin() const;
 
 		// get an entity's networked eye angles
-		mango::vec3f get_eye_angles() const;
+		mango::Vec3f get_eye_angles() const;
 
 		// spawn time immunity
 		bool is_immune() const;
 
 		// how long they've been flashed for
 		float get_flash_duration() const;
+
+		// entity is outside our pvs according to the server
+		bool is_dormant() const;
 
 	private:
 		uint32_t m_address = 0;

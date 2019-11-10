@@ -13,15 +13,15 @@ namespace sdk {
 		mango::fnv1a<uint64_t>("engine.dll:VEngineClient")> {
 	public:
 		// get localplayer index
-		uint32_t get_local_player() const;
+		int get_local_player() const;
 
 		// check if player is in game
 		bool is_in_game() const;
 
 		// get the localplayer viewangles
-		mango::vec3f get_view_angles() const;
+		mango::Vec3f get_view_angles() const;
 
 		// set the localplayer viewangles
-		void set_view_angles(const mango::vec3f& angles) const;
+		void set_view_angles(const mango::Vec3f& angles) const;
 	};
 } // namespace sdk
