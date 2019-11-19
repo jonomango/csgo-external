@@ -11,6 +11,7 @@ namespace sdk {
 	void DatamapCache::cache() {
 		for (const auto address : mango::find_all_patterns(globals::process, enc_str("client_panorama.dll"),
 			enc_str("C7 05 ? ? ? ? ? ? ? ? C7 05 ? ? ? ? ? ? ? ? C3 CC CC CC CC CC CC CC CC CC CC CC"))) {
+
 			const auto num_fields_addr = globals::process.read<uint32_t>(address + 2);
 			const auto num_fields = globals::process.read<uint32_t>(address + 6);
 			const auto data_desc_addr = globals::process.read<uint32_t>(address + 12);
@@ -85,7 +86,7 @@ namespace sdk {
 			globals::process.read(type_desc.m_field_name, field_name, 256);
 			field_name[255] = '\0';
 
-			const auto hash = mango::fnv1a<uint64_t>((std::string(class_name) + ":" + field_name).c_str());
+			const auto hash = mango::fnv1a<uint64_t>((std::string(class_name) + ':' + field_name).c_str());
 			this->m_fields[hash] = type_desc.m_field_offset[0];
 		}
 	}

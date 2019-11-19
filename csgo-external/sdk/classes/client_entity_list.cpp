@@ -7,7 +7,7 @@ namespace sdk {
 	// get an entity from their index
 	BaseEntity ClientEntityList::get_client_entity(int index) const {
 		// ref @GetClientEntity
-		index += 0x0FFFFDFFF;
+		index += 0xFFFF'DFFF;
 		const auto address = interfaces::client_entity_list + (index + index) * 0x8;
 		return BaseEntity(globals::process.read<uint32_t>(address));
 	}

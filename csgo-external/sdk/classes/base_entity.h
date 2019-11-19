@@ -39,6 +39,7 @@ namespace sdk {
 
 		// how long they've been flashed for
 		float get_flash_duration() const;
+		void set_flash_duration(const float value) const;
 
 		// entity is outside our pvs according to the server
 		bool is_dormant() const;

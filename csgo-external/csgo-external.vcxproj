@@ -163,6 +163,7 @@
     <ClCompile Include="sdk\misc\netvar_cache.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="config.h" />
     <ClInclude Include="sdk\classes\base_entity.h" />
     <ClInclude Include="sdk\classes\client.h" />
     <ClInclude Include="sdk\classes\client_entity_list.h" />

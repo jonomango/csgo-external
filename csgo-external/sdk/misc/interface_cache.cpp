@@ -2,10 +2,10 @@
 
 #include "constants.h"
 
-#include <crypto/fnv_hash.h>
 #include <crypto/string_encryption.h>
 
 #include <misc/logger.h>
+#include <misc/fnv_hash.h>
 #include <misc/error_codes.h>
 
 #include <stdint.h>
@@ -45,8 +45,8 @@ namespace sdk {
 			return;
 
 		// jmp create_interface_internal
-		const auto create_interface_internal_addr = create_interface_addr +
-			globals::process.read<uint32_t>(create_interface_addr + 0x5) + 0x9;
+		const auto create_interface_internal_addr = create_interface_addr + 0x9 +
+			globals::process.read<uint32_t>(create_interface_addr + 0x5);
 
 		// linked list of interfaces
 		struct InterfaceNode {

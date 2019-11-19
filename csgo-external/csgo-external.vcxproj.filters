@@ -74,5 +74,8 @@
     <ClInclude Include="sdk\misc\datamap_cache.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="config.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

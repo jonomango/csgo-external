@@ -5,7 +5,7 @@
 #include "datamap_cache.h"
 
 #include <epic/pattern_scanner.h>
-#include <crypto/fnv_hash.h>
+#include <misc/fnv_hash.h>
 #include <crypto/string_encryption.h>
 
 
@@ -21,6 +21,20 @@ namespace sdk {
 		interfaces::client_entity_list = ClientEntityList::create(interface_cache);
 		
 		mango::logger.success(enc_str("Found interfaces."));
+
+		// dynamically get the clientmode address (ref @HudProcessInput)
+		const auto hud_process_input = globals::process.get_vfunc<uint32_t>(
+			interfaces::client, indices::hud_process_input);
+		const auto client_mode_addr = globals::process.read<uint32_t>(hud_process_input + 0x5);
+		globals::client_mode = globals::process.read<uint32_t>(client_mode_addr);
+
+		// dynamically get the glow object manager address (ref @DoPostScreenSpaceEffects)
+		const auto do_post_screen_space_effects = globals::process.get_vfunc<uint32_t>(
+			globals::client_mode, indices::do_post_screen_space_effects);
+		const auto get_glow_manager = do_post_screen_space_effects + 0x22 + 4 + // jmp is relative to next instruction
+			globals::process.read<uint32_t>(do_post_screen_space_effects + 0x22); // relative jmp
+		globals::glow_object_manager = globals::process.read<uint32_t>(get_glow_manager + 0x19);
+		mango::logger.info(std::hex, globals::glow_object_manager);
 
 		// @GetLocalPlayerIndex
 		const auto get_local_player_index = globals::process.get_vfunc<uint32_t>(

@@ -46,6 +46,9 @@ namespace sdk {
 	float BaseEntity::get_flash_duration() const {
 		return globals::process.read<float>(this->m_address + offsets::m_flFlashDuration);
 	}
+	void BaseEntity::set_flash_duration(const float value) const {
+		globals::process.write(this->m_address + offsets::m_flFlashDuration, value);
+	}
 
 	// entity is outside our pvs according to the server
 	bool BaseEntity::is_dormant() const {

@@ -4,11 +4,13 @@
 #include <misc/logger.h>
 #include <misc/vector.h>
 #include <misc/error_codes.h>
-#include <crypto/fnv_hash.h>
+#include <misc/fnv_hash.h>
 #include <crypto/string_encryption.h>
 
 #include "sdk/misc/constants.h"
 #include "sdk/classes/base_entity.h"
+
+#include "config.h"
 
 #include <thread>
 #include <sstream>
@@ -44,7 +46,7 @@ void setup_logger() {
 	mango::logger.success(enc_str("Logging channels initialized."));
 }
 
-// sets up stuff
+// sets up stuff (interfaces, netvars, ...)
 void setup_cheat() {
 	// get window
 	const auto csgo_hwnd = FindWindow(nullptr, enc_str("Counter-Strike: Global Offensive").c_str());
@@ -73,8 +75,10 @@ void setup_cheat() {
 
 // where the juice is
 void run_cheat() {
+	using namespace sdk;
+
 	while (true) {
-		if (!sdk::interfaces::engine_client.is_in_game()) {
+		if (!interfaces::engine_client.is_in_game()) {
 			std::this_thread::sleep_for(std::chrono::milliseconds(100));
 			continue;
 		}
@@ -82,18 +86,24 @@ void run_cheat() {
 		mango::logger.info(enc_str("InGame:true"));
 
 		// update local_player every time we join a game
-		const auto local_player = sdk::interfaces::client_entity_list.get_local_player();
+		const auto local_player = interfaces::client_entity_list.get_local_player();
 
 		// we're in game, lets do some shib
-		while (sdk::interfaces::engine_client.is_in_game()) {
+		while (interfaces::engine_client.is_in_game()) {
+			// noflash feature
+			local_player.set_flash_duration(0.f);
+
 			// iterate over every player
 			for (int i = 1; i < 64; ++i) {
-				const auto entity = sdk::interfaces::client_entity_list.get_client_entity(i);
+				const auto entity = interfaces::client_entity_list.get_client_entity(i);
 				if (!entity || entity.is_dormant() || entity.get_team() == local_player.get_team() || entity.get_health() <= 0)
 					continue;
 
+				// radar feature
 				entity.set_spotted(true);
 			}
+
+			std::this_thread::sleep_for(std::chrono::milliseconds(1));
 		}
 
 		mango::logger.info(enc_str("InGame:false"));
