@@ -19,6 +19,7 @@ namespace sdk {
 		interfaces::client = Client::create(interface_cache);
 		interfaces::engine_client = EngineClient::create(interface_cache);
 		interfaces::client_entity_list = ClientEntityList::create(interface_cache);
+		interfaces::engine_cvar = EngineCvar::create(interface_cache);
 		
 		mango::logger.success(enc_str("Found interfaces."));
 
@@ -33,8 +34,7 @@ namespace sdk {
 			globals::client_mode, indices::do_post_screen_space_effects);
 		const auto get_glow_manager = do_post_screen_space_effects + 0x22 + 4 + // jmp is relative to next instruction
 			globals::process.read<uint32_t>(do_post_screen_space_effects + 0x22); // relative jmp
-		globals::glow_object_manager = globals::process.read<uint32_t>(get_glow_manager + 0x19);
-		mango::logger.info(std::hex, globals::glow_object_manager);
+		globals::glow_object_manager = GlowObjectManager(globals::process.read<uint32_t>(get_glow_manager + 0x19));
 
 		// @GetLocalPlayerIndex
 		const auto get_local_player_index = globals::process.get_vfunc<uint32_t>(

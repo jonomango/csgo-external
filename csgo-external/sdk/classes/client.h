@@ -1,7 +1,5 @@
 #pragma once
 
-#include <stdint.h>
-
 #include "../misc/interface_base.h"
 
 

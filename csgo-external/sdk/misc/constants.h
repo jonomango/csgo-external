@@ -5,6 +5,8 @@
 #include "../classes/client.h"
 #include "../classes/engine_client.h"
 #include "../classes/client_entity_list.h"
+#include "../classes/engine_cvar.h"
+#include "../classes/glow_object_manager.h"
 
 
 namespace sdk {
@@ -14,7 +16,7 @@ namespace sdk {
 		inline mango::Process process;
 
 		// https://github.com/ValveSoftware/source-sdk-2013/blob/master/mp/src/game/client/glow_outline_effect.cpp
-		inline uint32_t glow_object_manager;
+		inline GlowObjectManager glow_object_manager;
 
 		// https://github.com/ValveSoftware/source-sdk-2013/blob/master/sp/src/game/client/iclientmode.h
 		inline uint32_t client_mode;
@@ -28,6 +30,7 @@ namespace sdk {
 		inline Client client;
 		inline EngineClient engine_client;
 		inline ClientEntityList client_entity_list;
+		inline EngineCvar engine_cvar;
 	} // namespace interfaces
 	namespace offsets {
 		inline uint32_t client_state_local_player_index;

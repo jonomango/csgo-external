@@ -88,10 +88,29 @@ void run_cheat() {
 		// update local_player every time we join a game
 		const auto local_player = interfaces::client_entity_list.get_local_player();
 
+		const auto sv_cheats_addr = interfaces::engine_cvar.find_var(enc_str("sv_cheats"));
+		if (sv_cheats_addr) {
+			const auto sv_cheats = globals::process.read<ConVar>(sv_cheats_addr);			
+			mango::logger.info(enc_str("sv_cheats: "), sv_cheats.get_value<bool>(sv_cheats_addr));
+		}
+
 		// we're in game, lets do some shib
 		while (interfaces::engine_client.is_in_game()) {
 			// noflash feature
 			local_player.set_flash_duration(0.f);
+
+			//sizeof(GlowObject);
+			for (int i = 0; i < globals::glow_object_manager.get_size(); ++i) {
+				auto object = globals::process.read<GlowObject>(
+					globals::glow_object_manager.get_glow_object_array() + i * sizeof(GlowObject));
+				if (!object.m_entity)
+					continue;
+
+				object.m_glow_color = mango::rgbaf(0.f, 1.f, 1.f, 0.5f);
+				object.m_render_when_occluded = true;
+
+				globals::process.write(globals::glow_object_manager.get_glow_object_array() + i * sizeof(GlowObject), object);
+			}
 
 			// iterate over every player
 			for (int i = 1; i < 64; ++i) {
