@@ -20,6 +20,7 @@ namespace sdk {
 		interfaces::engine_client = EngineClient::create(interface_cache);
 		interfaces::client_entity_list = ClientEntityList::create(interface_cache);
 		interfaces::engine_cvar = EngineCvar::create(interface_cache);
+		interfaces::material_system = MaterialSystem::create(interface_cache);
 		
 		mango::logger.success(enc_str("Found interfaces."));
 
@@ -78,7 +79,11 @@ namespace sdk {
 		offsets::m_angEyeAngles = netvar_cache.get<fnv1a<uint64_t>("DT_CSPlayer:m_angEyeAngles")>();
 		offsets::m_bGunGameImmunity = netvar_cache.get<fnv1a<uint64_t>("DT_CSPlayer:m_bGunGameImmunity")>();
 		offsets::m_flFlashDuration = netvar_cache.get<fnv1a<uint64_t>("DT_CSPlayer:m_flFlashDuration")>();
-		
+
+		// m_iGlowIndex is set in the CCSPlayer constructor, right after
+		// it calls GetGlowObjectManager() and RegisterGlowObject()
+		offsets::m_iGlowIndex = offsets::m_flFlashDuration + 0x18;
+
 		mango::logger.success(enc_str("Found netvars."));
 
 		// cache datamap fields

@@ -6,6 +6,7 @@
 #include "../classes/engine_client.h"
 #include "../classes/client_entity_list.h"
 #include "../classes/engine_cvar.h"
+#include "../classes/material_system.h"
 #include "../classes/glow_object_manager.h"
 
 
@@ -31,6 +32,7 @@ namespace sdk {
 		inline EngineClient engine_client;
 		inline ClientEntityList client_entity_list;
 		inline EngineCvar engine_cvar;
+		inline MaterialSystem material_system;
 	} // namespace interfaces
 	namespace offsets {
 		inline uint32_t client_state_local_player_index;
@@ -38,6 +40,8 @@ namespace sdk {
 
 		// https://github.com/VSES/SourceEngine2007/blob/master/src_main/common/protocol.h
 		inline uint32_t client_state_signon_state;
+
+		inline uint32_t m_iGlowIndex;
 
 		// netvars
 		inline uint32_t m_iHealth;
@@ -70,5 +74,8 @@ namespace sdk {
 
 		// ClientModeSDKNormal
 		const inline uint32_t do_post_screen_space_effects = 44;
+
+		// IMaterial
+		const inline uint32_t get_shader_params = 41;
 	} // indices
 } // namespace sdk

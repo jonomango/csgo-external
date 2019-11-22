@@ -54,4 +54,9 @@ namespace sdk {
 	bool BaseEntity::is_dormant() const {
 		return globals::process.read<bool>(this->m_address + offsets::m_bDormant);
 	}
+
+	// get the index into the glow object array (called nGlowObjectHandle in the source sdk)
+	int BaseEntity::get_glow_index() const {
+		return globals::process.read<int>(this->m_address + offsets::m_iGlowIndex);
+	}
 } // namespace sdk

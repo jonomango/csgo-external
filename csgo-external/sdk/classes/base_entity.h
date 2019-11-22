@@ -44,6 +44,9 @@ namespace sdk {
 		// entity is outside our pvs according to the server
 		bool is_dormant() const;
 
+		// get the index into the glow object array (called nGlowObjectHandle in the source sdk)
+		int get_glow_index() const;
+
 	private:
 		uint32_t m_address = 0;
 	};

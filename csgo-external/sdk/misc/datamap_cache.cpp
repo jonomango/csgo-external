@@ -45,29 +45,6 @@ namespace sdk {
 
 	// add each field in the datamap to m_fields
 	void DatamapCache::parse_datamap(const uint32_t datamap_addr) {
-		// information about a variable basically
-		struct TypeDescription {
-			uint32_t m_field_type;
-			uint32_t m_field_name;
-			uint32_t m_field_offset[2];
-		private:
-			uint8_t m_padding_1[16];
-		public:
-			uint32_t m_field_size;
-		private:
-			uint8_t m_padding_2[24];
-		};
-
-		// a "map" of variables
-		struct Datamap {
-			uint32_t m_data_fields; // TypeDescription*
-			uint32_t m_num_fields;
-			uint32_t m_class_name;
-			uint32_t m_base_datamap;
-		private:
-			uint8_t m_padding_1[6];
-		};
-
 		const auto datamap = globals::process.read<Datamap>(datamap_addr);
 
 		// read the classname

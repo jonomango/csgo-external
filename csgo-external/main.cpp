@@ -9,6 +9,9 @@
 
 #include "sdk/misc/constants.h"
 #include "sdk/classes/base_entity.h"
+#include "sdk/classes/material.h"
+
+#include "features/glow.h"
 
 #include "config.h"
 
@@ -88,38 +91,40 @@ void run_cheat() {
 		// update local_player every time we join a game
 		const auto local_player = interfaces::client_entity_list.get_local_player();
 
-		const auto sv_cheats_addr = interfaces::engine_cvar.find_var(enc_str("sv_cheats"));
-		if (sv_cheats_addr) {
-			const auto sv_cheats = globals::process.read<ConVar>(sv_cheats_addr);			
-			mango::logger.info(enc_str("sv_cheats: "), sv_cheats.get_value<bool>(sv_cheats_addr));
+		// changes on map change
+		globals::glow_object_manager.update_object_definitions();
+
+		for (auto handle = interfaces::material_system.first_material();
+				  handle != interfaces::material_system.invalid_material();
+				  handle = interfaces::material_system.next_material(handle)) {
+		
+			const auto material = interfaces::material_system.get_material(handle);
+			material.alpha_modulate(0.69f);
 		}
 
 		// we're in game, lets do some shib
-		while (interfaces::engine_client.is_in_game()) {
-			// noflash feature
+		while (interfaces::engine_client.is_in_game()) { 
+			// noflash
 			local_player.set_flash_duration(0.f);
 
-			//sizeof(GlowObject);
-			for (int i = 0; i < globals::glow_object_manager.get_size(); ++i) {
-				auto object = globals::process.read<GlowObject>(
-					globals::glow_object_manager.get_glow_object_array() + i * sizeof(GlowObject));
-				if (!object.m_entity)
-					continue;
-
-				object.m_glow_color = mango::rgbaf(0.f, 1.f, 1.f, 0.5f);
-				object.m_render_when_occluded = true;
-
-				globals::process.write(globals::glow_object_manager.get_glow_object_array() + i * sizeof(GlowObject), object);
-			}
+			// cache the value (barely helps but whatev)
+			const auto local_player_team = local_player.get_team();
 
 			// iterate over every player
 			for (int i = 1; i < 64; ++i) {
 				const auto entity = interfaces::client_entity_list.get_client_entity(i);
-				if (!entity || entity.is_dormant() || entity.get_team() == local_player.get_team() || entity.get_health() <= 0)
+				if (!entity || entity == local_player || entity.is_dormant() || entity.get_health() <= 0)
 					continue;
 
-				// radar feature
-				entity.set_spotted(true);
+				// enemies
+				if (entity.get_team() != local_player_team) {
+					features::glow::draw_entity(entity, { 0.f, 1.f, 1.f, 0.6f });
+
+					// radar
+					entity.set_spotted(true);
+				} else /* teammates */ {
+					features::glow::draw_entity(entity, { 1.f, 0.f, 0.f, 0.6f });
+				}
 			}
 
 			std::this_thread::sleep_for(std::chrono::milliseconds(1));

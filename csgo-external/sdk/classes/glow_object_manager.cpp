@@ -5,7 +5,12 @@
 
 namespace sdk {
 	GlowObjectManager::GlowObjectManager(const uint32_t address) noexcept 
-		: m_address(address), m_glow_object_definitions(globals::process.read<uint32_t>(address)) {}
+		: m_address(address) {}
+
+	// on map change
+	void GlowObjectManager::update_object_definitions() {
+		this->m_glow_object_definitions = globals::process.read<uint32_t>(this->m_address);
+	}
 
 	// get num of entries
 	int GlowObjectManager::get_size() const {

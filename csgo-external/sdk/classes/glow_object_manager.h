@@ -4,23 +4,10 @@
 #include <misc/color.h>
 
 #include "base_entity.h"
+#include "defines.h"
 
 
 namespace sdk {
-	struct GlowObject {
-		BaseEntity m_entity;
-		mango::rgbaf m_glow_color;
-	private:
-		uint8_t m_padding_0[0x10];
-	public:
-		bool m_render_when_occluded;
-		bool m_render_when_unoccluded;
-	private:
-		uint8_t m_padding_1[0xC];
-	public:
-		int m_next_free_slot;
-	}; // sizeof(GlowObject) == 0x38
-
 	class GlowObjectManager {
 	public:
 		GlowObjectManager() = default;
@@ -30,6 +17,9 @@ namespace sdk {
 		operator uint32_t() const noexcept { return this->m_address; }
 
 	public:
+		// on map change
+		void update_object_definitions();
+
 		// get num of entries
 		int get_size() const;
 
