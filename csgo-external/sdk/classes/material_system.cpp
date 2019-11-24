@@ -78,6 +78,23 @@ namespace sdk {
 		return Material(globals::process.read<uint32_t>(this->get_handle_array() + uint32_t(handle) * 16 + 8));
 	}
 
+	// this just iterates through all materials and compares their names
+	Material MaterialSystem::find_material(const std::string_view name, const std::optional<std::string_view> group_name) const {
+		for (auto handle = this->first_material(); handle != this->invalid_material(); handle = this->next_material(handle)) {
+			const auto material = this->get_material(handle);
+			if (!material)
+				continue;
+
+			// this part is optional
+			if (group_name && *group_name != material.get_texture_group_name())
+				continue;
+
+			if (material.get_name() == name)
+				return material;
+		}
+	}
+
+	// each object is like 16 bytes
 	uint32_t MaterialSystem::get_handle_array() const {
 		return globals::process.read<uint32_t>(this->m_address + 0x244);
 	}

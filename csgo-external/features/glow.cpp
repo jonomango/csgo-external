@@ -8,10 +8,10 @@ namespace features::glow {
 		using namespace sdk;
 
 		// get the address of the glow object
-		const auto glow_object_addr = sizeof(GlowObject) * entity.get_glow_index() +
-			globals::glow_object_manager.get_glow_object_array();
-		auto glow_object = globals::process.read<GlowObject>(glow_object_addr);
+		const auto glow_object_addr = globals::glow_object_manager.get_glow_object_array() + 
+			sizeof(GlowObject) * entity.get_glow_index();
 
+		auto glow_object = globals::process.read<GlowObject>(glow_object_addr);
 		glow_object.m_glow_color = color;
 		glow_object.m_render_when_occluded = true;
 

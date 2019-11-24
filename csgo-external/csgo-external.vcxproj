@@ -153,6 +153,8 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="features\glow.cpp" />
+    <ClCompile Include="features\nightmode.cpp" />
+    <ClCompile Include="hooks\hooks.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="sdk\classes\base_entity.cpp" />
     <ClCompile Include="sdk\classes\client.cpp" />
@@ -170,6 +172,8 @@
   <ItemGroup>
     <ClInclude Include="config.h" />
     <ClInclude Include="features\glow.h" />
+    <ClInclude Include="features\nightmode.h" />
+    <ClInclude Include="hooks\hooks.h" />
     <ClInclude Include="sdk\classes\base_entity.h" />
     <ClInclude Include="sdk\classes\client.h" />
     <ClInclude Include="sdk\classes\client_entity_list.h" />

@@ -4,6 +4,9 @@
 
 #include "material.h"
 
+#include <string_view>
+#include <optional>
+
 
 namespace sdk {
 	using MaterialHandle = uint16_t;
@@ -24,7 +27,11 @@ namespace sdk {
 		// invalid material handle
 		MaterialHandle invalid_material() const { return 0xFFFF; }
 
+		// this just iterates through all materials and compares their names
+		Material find_material(const std::string_view name, const std::optional<std::string_view> group_name = {}) const;
+
 	private:
+		// each object is like 16 bytes
 		uint32_t get_handle_array() const;
 	};
 } // namespace sdk

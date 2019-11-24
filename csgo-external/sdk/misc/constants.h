@@ -26,6 +26,9 @@ namespace sdk {
 		inline uint32_t client_state;
 
 		inline uint32_t client_class_head;
+
+		// not sure what to name this but whatever
+		inline uint32_t material_name_related_var;
 	} // namespace globals
 	namespace interfaces {
 		inline Client client;
@@ -72,7 +75,8 @@ namespace sdk {
 		const inline uint32_t get_all_classes = 8;
 		const inline uint32_t hud_process_input = 10;
 
-		// ClientModeSDKNormal
+		// IClientMode
+		const inline uint32_t create_move = 24;
 		const inline uint32_t do_post_screen_space_effects = 44;
 
 		// IMaterial

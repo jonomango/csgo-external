@@ -22,14 +22,14 @@ namespace sdk {
 				continue;
 
 			// obvious...
-			if (num_fields <= 0)
+			if (num_fields <= 0 || num_fields > 200)
 				continue;
 
 			// these should be the same
 			if (globals::process.read<uint32_t>(num_fields_addr) != num_fields ||
 				globals::process.read<uint32_t>(data_desc_addr) != data_desc)
 				continue;
-
+			
 			this->parse_datamap(data_desc_addr);
 		}
 	}

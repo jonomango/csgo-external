@@ -3,6 +3,7 @@
 #include <stdint.h>
 
 #include <misc/color.h>
+#include <misc/vector.h>
 
 
 namespace sdk {
@@ -126,4 +127,35 @@ namespace sdk {
 	public:
 		int m_next_free_slot;
 	}; // sizeof(GlowObject) == 0x38
+
+	// https://github.com/ValveSoftware/source-sdk-2013/blob/master/mp/src/public/materialsystem/imaterialvar.h
+	struct MaterialVar {
+		uint32_t m_vtable;
+		uint32_t m_string_value;
+		int32_t m_int_value;
+		mango::Vec4f m_vec_value;
+		uint8_t m_type : 4;
+	};
+
+	// https://github.com/ValveSoftware/source-sdk-2013/blob/master/sp/src/game/shared/usercmd.h
+	struct CUserCmd {
+	private:
+		uint8_t m_padding[0x4];
+	public:
+		int command_number;
+		int tick_count;
+		mango::Vec3f viewangles;
+		mango::Vec3f aimdirection;
+		float forwardmove;
+		float sidemove;
+		float upmove;
+		int buttons;
+		uint8_t impulse;
+		int weaponselect;
+		int weaponsubtype;
+		int random_seed;
+		short mousedx;
+		short mousedy;
+		bool hasbeenpredicted;
+	};
 } // namespace sdk

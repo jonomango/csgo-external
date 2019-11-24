@@ -8,10 +8,10 @@
 #include <crypto/string_encryption.h>
 
 #include "sdk/misc/constants.h"
-#include "sdk/classes/base_entity.h"
-#include "sdk/classes/material.h"
+#include "hooks/hooks.h"
 
 #include "features/glow.h"
+#include "features/nightmode.h"
 
 #include "config.h"
 
@@ -74,41 +74,47 @@ void setup_cheat() {
 
 	// gets interfaces and stuffs and shibs
 	sdk::setup_constants();
+
+	// setup our hooks
+	hooks::hook();
+}
+
+// cleanup
+void release_cheat() {
+	hooks::release();
+
+	sdk::globals::process.release();
 }
 
 // where the juice is
 void run_cheat() {
 	using namespace sdk;
 
-	while (true) {
+	while (!GetAsyncKeyState(VK_INSERT)) {
 		if (!interfaces::engine_client.is_in_game()) {
 			std::this_thread::sleep_for(std::chrono::milliseconds(100));
 			continue;
 		}
 
-		mango::logger.info(enc_str("InGame:true"));
+		mango::logger.info(enc_str("Entering main loop..."));
 
 		// update local_player every time we join a game
 		const auto local_player = interfaces::client_entity_list.get_local_player();
 
-		// changes on map change
-		globals::glow_object_manager.update_object_definitions();
-
-		for (auto handle = interfaces::material_system.first_material();
-				  handle != interfaces::material_system.invalid_material();
-				  handle = interfaces::material_system.next_material(handle)) {
-		
-			const auto material = interfaces::material_system.get_material(handle);
-			material.alpha_modulate(0.69f);
-		}
+		// modulate on game load
+		features::nightmode::modulate(config::misc::nightmode_color);
 
 		// we're in game, lets do some shib
-		while (interfaces::engine_client.is_in_game()) { 
+		while (interfaces::engine_client.is_in_game() && !GetAsyncKeyState(VK_INSERT)) { 
 			// noflash
-			local_player.set_flash_duration(0.f);
+			if (config::misc::noflash_enabled)
+				local_player.set_flash_duration(0.f);
 
 			// cache the value (barely helps but whatev)
 			const auto local_player_team = local_player.get_team();
+
+			// this updates often (probably when objects are added/removed)
+			globals::glow_object_manager.update_object_definitions();
 
 			// iterate over every player
 			for (int i = 1; i < 64; ++i) {
@@ -118,38 +124,40 @@ void run_cheat() {
 
 				// enemies
 				if (entity.get_team() != local_player_team) {
-					features::glow::draw_entity(entity, { 0.f, 1.f, 1.f, 0.6f });
+					// glow
+					if (config::glow::enemy_enabled)
+						features::glow::draw_entity(entity, config::glow::enemy_color);
 
 					// radar
-					entity.set_spotted(true);
+					if (config::misc::radar_enabled)
+						entity.set_spotted(true);
 				} else /* teammates */ {
-					features::glow::draw_entity(entity, { 1.f, 0.f, 0.f, 0.6f });
+					// glow
+					if (config::glow::teammate_enabled)
+						features::glow::draw_entity(entity, config::glow::teammate_color);
 				}
 			}
 
-			std::this_thread::sleep_for(std::chrono::milliseconds(1));
+			std::this_thread::sleep_for(std::chrono::milliseconds(2));
 		}
 
-		mango::logger.info(enc_str("InGame:false"));
+		mango::logger.info(enc_str("Exiting main loop..."));
 	}
 }
 
 // entrypoint
 int main() {
 	setup_logger();
-	
+
 	try {
 		setup_cheat();
+		mango::ScopeGuard _guard(&release_cheat);
+
 		run_cheat();
-	} catch (const mango::MangoError& e) {
-		mango::logger.error(e.what());
 	} catch (const std::exception& e) {
 		mango::logger.error(e.what());
-	} catch (...) {
-		mango::logger.error(enc_str("Unhandled exception"));
+		std::system(enc_str("pause").c_str());
 	}
 	
-	mango::logger.info(enc_str("Program ended."));
-	getchar();
 	return 0;
 }

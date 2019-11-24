@@ -24,6 +24,12 @@ namespace sdk {
 		
 		mango::logger.success(enc_str("Found interfaces."));
 
+		// ref @IMaterial::GetName and @IMaterial::GetTextureGroupName
+		const auto get_name_imp = mango::find_pattern(globals::process, 
+			enc_str("materialsystem.dll"), enc_str("80 3D ? ? ? ? ? 66 8B 01"));
+		globals::material_name_related_var = globals::process.read<uint32_t>(
+			globals::process.read<uint32_t>(get_name_imp + 0x2) + 0x4);
+
 		// dynamically get the clientmode address (ref @HudProcessInput)
 		const auto hud_process_input = globals::process.get_vfunc<uint32_t>(
 			interfaces::client, indices::hud_process_input);

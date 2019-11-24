@@ -3,6 +3,10 @@
 #include <stdint.h>
 #include <string>
 
+#include <misc/color.h>
+
+#include "defines.h"
+
 
 namespace sdk {
 	// https://github.com/ValveSoftware/source-sdk-2013/blob/master/mp/src/public/materialsystem/imaterial.h
@@ -21,11 +25,14 @@ namespace sdk {
 		// material texture group name
 		std::string get_texture_group_name() const;
 
+		// an array of IMaterialVar*
+		uint32_t get_shader_params() const;
+
 		// set the alpha of the material
 		void alpha_modulate(const float value) const;
 
-		// an array of IMaterialVar*
-		uint32_t get_shader_params() const;
+		// modulate the material (alpha is ignored, see alpha_modulate)
+		void color_modulate(const mango::rgbaf& value) const;
 
 	private:
 		// i don't fully understand their mechanism for this, but basically a call to GetName()
