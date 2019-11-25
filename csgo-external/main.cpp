@@ -129,8 +129,8 @@ void run_cheat() {
 						features::glow::draw_entity(entity, config::glow::enemy_color);
 
 					// radar
-					if (config::misc::radar_enabled)
-						entity.set_spotted(true);
+					//if (config::misc::radar_enabled)
+					//	entity.set_spotted(true);
 				} else /* teammates */ {
 					// glow
 					if (config::glow::teammate_enabled)
