@@ -47,6 +47,9 @@ namespace sdk {
 		// get the index into the glow object array (called nGlowObjectHandle in the source sdk)
 		int get_glow_index() const;
 
+		// only the z component is nonzero afaik
+		mango::Vec3f get_view_offset() const;
+
 	private:
 		uint32_t m_address = 0;
 	};

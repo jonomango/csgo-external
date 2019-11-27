@@ -97,7 +97,7 @@ namespace sdk {
 		datamap_cache.cache();
 
 		// get datamap fields
-
+		offsets::m_vecViewOffset = datamap_cache.get<fnv1a<uint64_t>("C_BaseEntity:m_vecViewOffset")>();
 
 		mango::logger.success(enc_str("Found datamap fields."));
 	}

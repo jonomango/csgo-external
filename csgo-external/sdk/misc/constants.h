@@ -55,6 +55,7 @@ namespace sdk {
 		inline uint32_t m_angEyeAngles;
 		inline uint32_t m_bGunGameImmunity;
 		inline uint32_t m_flFlashDuration;
+		inline uint32_t m_vecViewOffset;
 
 		// datamap
 

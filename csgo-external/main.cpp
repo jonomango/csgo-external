@@ -86,6 +86,28 @@ void release_cheat() {
 	sdk::globals::process.release();
 }
 
+mango::Vec3f vector_angle(mango::Vec3f direction) {
+	if (direction[0] == 0.f && direction[1] == 0.f) {
+		if (direction[2] > 0.f) {
+			return { -90.f, 0.f, 0.f };
+		} else {
+			return { 90.f, 0.f, 0.f };
+		}
+	} else {
+		// yaw
+		float yaw = atan2(direction[1], direction[0]);
+		yaw *= 57.2957795131f;
+
+		// pitch
+		float pitch = direction[0] * direction[0] + direction[1] * direction[1];
+		pitch = sqrt(pitch);
+		pitch = atan2(-direction[2], pitch);
+		pitch *= 57.2957795131f;
+
+		return { pitch, yaw, 0.f };
+	}
+}
+
 // where the juice is
 void run_cheat() {
 	using namespace sdk;
@@ -129,8 +151,8 @@ void run_cheat() {
 						features::glow::draw_entity(entity, config::glow::enemy_color);
 
 					// radar
-					//if (config::misc::radar_enabled)
-					//	entity.set_spotted(true);
+					if (config::misc::radar_enabled)
+						entity.set_spotted(true);
 				} else /* teammates */ {
 					// glow
 					if (config::glow::teammate_enabled)

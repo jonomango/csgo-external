@@ -59,4 +59,9 @@ namespace sdk {
 	int BaseEntity::get_glow_index() const {
 		return globals::process.read<int>(this->m_address + offsets::m_iGlowIndex);
 	}
+	// only the z component is nonzero afaik
+	mango::Vec3f BaseEntity::get_view_offset() const {
+		return globals::process.read<mango::Vec3f>(this->m_address + offsets::m_vecViewOffset);
+	}
+
 } // namespace sdk
