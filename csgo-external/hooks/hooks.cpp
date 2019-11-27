@@ -178,17 +178,17 @@ namespace {
 			"\xF3\x0F\x10\xC5",						// movss xmm0, xmm5
 
 			mango::Shellcode::epilogue<false>(),
-			mango::Shellcode::ret(0x8)
+			mango::Shellcode::ret()
 		);
 
-		// converts a direction to an angle
-		// void vectorangle(vec3* direction, vec3* angle)
+		// converts a direction to angles
+		// void vectorangle(vec3* direction, vec3* angles)
 		mango::Shellcode vectorangle_shellcode(
 			mango::Shellcode::prologue<false>(),
 
 			// arguments:
 			// [ebp + 0x08] == direction
-			// [ebp + 0x0C] == angle
+			// [ebp + 0x0C] == angles
 			// local variables:
 			// [ebp - 0x0C] == direction (copy)
 			"\x83\xEC", uint8_t(					// sub esp, (size of local variables)
@@ -203,24 +203,87 @@ namespace {
 			"\x8B\x50\x08",							// mov edx, [eax + 8]
 			"\x89\x55\xFC",							// mov [ebp - 0x04], edx
 
-			// print_vector(vector)
-			//"\x8B\x45\x0C",							// mov eax, [ebp + 0x0C]
-			//"\x50",									// push eax
-			//"\xB8", uint32_t(						// mov eax, print_vector
-			//	print_vector),
-			//"\xFF\xD0",								// call eax
+			// if (direction[0] == 0.f)
+			"\x83\x7D\xF4\x00",						// cmp [ebp - 0x0C], 0
+			"\x75", uint8_t(						// jne (skip the next check)
+				40),
 
-			// arguments for atan2 are in xmm0 and xmm1
-			"\x68", uint32_t(0xc2860000),						// push float
-			"\xF3\x0F\x10\x04\x24",					// movss xmm0, [esp]
-			"\x68", uint32_t(0x42f80000),						// push float
-			"\xF3\x0F\x10\x0C\x24",					// movss xmm1, [esp]
-			"\x83\xC4\x08",							// add esp, 8
+			// if (direction[1] == 0.f)
+			"\x83\x7D\xF8\x00",						// cmp [ebp - 0x08], 0
+			"\x75", uint8_t(						// jne (skip the ret)
+				34),
 
-			// atan2(xmm0, xmm1)
+			// address of angles in eax
+			"\x8B\x45\x0C",							// mov eax, [ebp + 0x0C]
+
+			// angles[1] = 0.f, angles[2] = 0.f
+			"\xC7\x40\x04\x00\x00\x00\x00",			// mov [eax + 4], 0
+			"\xC7\x40\x08\x00\x00\x00\x00",			// mov [eax + 8], 0
+
+			// +90 if direction[2] is positive, else negative 90
+			"\x8B\x55\xFC",							// mov edx, [ebp - 0x4]
+
+			// copy the sign mask into edx
+			"\x81\xE2\x00\x00\x00\x80",				// and edx, 0x80000000 (1 << 31)
+
+			// mov 90.f into angles[0] and copy the sign bit from direction[2]
+			"\xC7\x00\x00\x00\xB4\x42",				// mov [eax], 90.f
+			"\x09\x10",								// or [eax], edx
+
+			// xmm0 = direction[1]
+			// xmm1 = direction[0]
+			"\xF3\x0F\x10\x45\xF8",					// movss xmm0, [ebp - 0x8]
+			"\xF3\x0F\x10\x4D\xF4",					// movss xmm1, [ebp - 0xC]
 			"\xE8", uint32_t(-int32_t(				// call atan2
 				atan2_shellcode.size() +
-				5 + 49)),
+				5 + 82)),
+
+			// change result to degrees
+			"\x68\xE1\x2E\x65\x42",					// push 57.2957795131f
+			"\xF3\x0F\x59\x04\x24",					// mulss xmm0, [esp]
+			"\x58",									// pop eax (cleanup the stack)
+
+			// angles[1] = result
+			"\x8B\x45\x0C",							// mov eax, [ebp + 0x0C]
+			"\xF3\x0F\x11\x40\x04",					// movss [eax + 4], xmm0
+
+			// xmm0 = direction[0] * direction[0]
+			"\xF3\x0F\x10\x45\xF4",					// movss xmm0, [ebp - 0xC]
+			"\xF3\x0F\x59\xC0",						// mulss xmm0, xmm0
+
+			// xmm1 = direction[1] * direction[1]
+			"\xF3\x0F\x10\x4D\xF8",					// movss xmm1, [ebp - 0x8]
+			"\xF3\x0F\x59\xC9",						// mulss xmm1, xmm1
+
+			// xmm0 += xmm1
+			"\xF3\x0F\x58\xC1",						// addss xmm0, xmm1
+
+			// xmm0 = sqrt(xmm0)
+			"\xF3\x0F\x51\xC0",						// sqrtss xmm0, xmm0
+
+			// xmm1 = xmm0
+			"\xF3\x0F\x10\xC8",						// movss xmm1, xmm0
+
+			// xmm0 = -direction[2]
+			"\x0F\x57\xC0",							// xorps xmm0, xmm0
+			"\xF3\x0F\x5C\x45\xFC",					// subss xmm0, [ebp - 0x4]
+
+			// atan2(-direction[2], xmm1)
+			"\xE8", uint32_t(-int32_t(				// call atan2
+				atan2_shellcode.size() +
+				5 + 82 + 62)),
+
+			// change result to degrees
+			"\x68\xE1\x2E\x65\x42",					// push 57.2957795131f
+			"\xF3\x0F\x59\x04\x24",					// mulss xmm0, [esp]
+			"\x58",									// pop eax (cleanup the stack)
+
+			// angles[0] = result
+			"\x8B\x45\x0C",							// mov eax, [ebp + 0x0C]
+			"\xF3\x0F\x11\x00",						// movss [eax], xmm0
+
+			// angles[2] = 0
+			"\xC7\x40\x08\x00\x00\x00\x00",			// mov [eax + 0x8], 0
 
 			mango::Shellcode::epilogue<false>(),
 			mango::Shellcode::ret(0x8)
@@ -259,6 +322,13 @@ namespace {
 			"\x8B\x90", uint32_t(					// mov edx, [eax + m_vecOrigin + 8]
 				offsets::m_vecOrigin + 8),
 			"\x89\x53\x08",							// mov [ebx + 8], edx
+
+			// add 35.f to the z component
+			"\x68", uint32_t(0x420c0000),			// push 35.f
+			"\xF3\x0F\x10\x43\x08",					// movss xmm0, [ebx + 8]
+			"\xF3\x0F\x58\x04\x24",					// addss xmm0, [esp]
+			"\xF3\x0F\x11\x43\x08",					// movss [ebx + 8], xmm0
+			"\x58",									// pop eax
 
 			// return 1
 			"\xB8\x01\x00\x00\x00",					// mov eax, 1
@@ -308,10 +378,10 @@ namespace {
 			"\x83\xB8", uint32_t(					// cmp [eax + m_iHealth], 0
 				offsets::m_iHealth), "\x00",
 			"\x0F\x85", uint32_t(					// jnz (skip the return)
-				11),
+				8),
 
-			// return true
-			"\xB8\x01\x00\x00\x00",					// mov eax, 1
+			// return false
+			"\x31\xC0",								// xor eax, eax
 			mango::Shellcode::epilogue<false>(),
 			mango::Shellcode::ret(8),
 
@@ -379,7 +449,7 @@ namespace {
 			"\xFF\x75\xFC",							// push [ebp - 4]	(localplayer)
 			"\xE8", uint32_t(-int32_t(				// call get_damage
 				getdamage_shellcode.size() + 
-				5 + 175)),															// FIX OFFSET
+				5 + 172)),															// FIX OFFSET
 
 			// pop the entity into edx
 			"\x5A",									// pop edx
@@ -413,10 +483,10 @@ namespace {
 			// if best_entity is nullptr, return
 			"\x83\x7D\xF4\x00",						// cmp [ebp - 0x0C], 0
 			"\x75",	uint8_t(						// jne (past first return)
-				11),
+				8),
 
-			// return true
-			"\xB8\x01\x00\x00\x00",					// mov eax, 1
+			// return false
+			"\x31\xC0",								// xor eax, eax
 			mango::Shellcode::epilogue<false>(),
 			mango::Shellcode::ret(8),
 
@@ -431,37 +501,48 @@ namespace {
 			"\x8B\x90", uint32_t(					// mov edx, [eax + m_vecOrigin + 8]
 				offsets::m_vecOrigin + 8),
 			"\x89\x55\xE4",							// mov [ebp - 0x1C], edx
-
+			
 			// add m_vecViewOffset[2] to position[2] (eax is still localplayer at this point)
 			"\xF3\x0F\x10\x45\xE4",					// movss xmm0, [ebp - 0x1C]
 			"\xF3\x0F\x58\x80", uint32_t(			// addss xmm0, [eax + m_vecViewOffset + 8]
 				offsets::m_vecViewOffset + 8),
 			"\xF3\x0F\x11\x45\xE4",					// movss [ebp - 0x1C], xmm0
-
+			
 			// position[0] = aim_position[0] - position[0]
 			"\xF3\x0F\x10\x45\xE8",					// movss xmm0, [ebp - 0x18]
 			"\xF3\x0F\x5C\x45\xDC",					// subss xmm0, [ebp - 0x24]
 			"\xF3\x0F\x11\x45\xDC",					// movss [ebp - 0x24], xmm0
-
+			
 			// position[1] = aim_position[1] - position[1]
 			"\xF3\x0F\x10\x45\xEC",					// movss xmm0, [ebp - 0x14]
 			"\xF3\x0F\x5C\x45\xE0",					// subss xmm0, [ebp - 0x20]
 			"\xF3\x0F\x11\x45\xE0",					// movss [ebp - 0x20], xmm0
-
+			
 			// position[2] = aim_position[2] - position[2]
 			"\xF3\x0F\x10\x45\xF0",					// movss xmm0, [ebp - 0x10]
 			"\xF3\x0F\x5C\x45\xE4",					// subss xmm0, [ebp - 0x1C]
 			"\xF3\x0F\x11\x45\xE4",					// movss [ebp - 0x1C], xmm0
 
 			// vectorangle(vector, vector)
-			"\x8D\x45\xDC",							// lea eax, [ebp - 0x24]
+			"\x8B\x45\x0C",							// mov eax, [ebp + 0xC] (CUserCmd*)
+			"\x8D\x40\x0C",							// lea eax, [eax + 0xC] (viewangles)
 			"\x50",									// push eax
+			"\x8D\x45\xDC",							// lea eax, [ebp - 0x24]
 			"\x50",									// push eax
 			"\xE8", uint32_t(-int32_t(				// call vectorangle
 				vectorangle_shellcode.size() + 
 				getdamage_shellcode.size() + 
 				5 + 340)),															// FIX OFFSET
 
+
+
+			// print_vector(vector)
+			"\x8D\x45\xDC",							// lea eax, [ebp - 0x0C]
+			"\x50",									// push eax
+			"\xB8", uint32_t(						// mov eax, print_vector
+				print_vector),
+			"\xFF\xD0",								// call eax
+			
 			// return false
 			"\x31\xC0",								// xor eax, eax
 			mango::Shellcode::epilogue<false>(),
