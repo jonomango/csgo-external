@@ -295,8 +295,22 @@ namespace {
 			mango::Shellcode::ret(0x8)
 		);
 
+		// void fixmovement(CUserCmd* cmd)
+		mango::Shellcode fixmovement_shellcode(
+			mango::Shellcode::prologue<false>(),
+
+			// arguments:
+			// [ebp + 0x08] == cmd
+			// local variables:
+			"\x83\xEC", uint8_t(					// sub esp, (size of local variables)
+				0),
+
+			mango::Shellcode::epilogue<false>(),
+			mango::Shellcode::ret(0x4)
+		);
+
 		// returns the amount of damage and sets position
-		// int getdamage(void* localplayer, void* entity, vec3* position)
+		// int getdamage(CBaseEntity* localplayer, CBaseEntity* entity, vec3* position)
 		mango::Shellcode getdamage_shellcode(
 			mango::Shellcode::prologue<false>(),
 
@@ -342,68 +356,32 @@ namespace {
 			mango::Shellcode::ret(0xC)
 		);
 
-		// CreateMove hook
-		mango::Shellcode createmove_shellcode(
+		// void runaimbot(CBaseEntity* localplayer, CUserCmd* cmd)
+		mango::Shellcode runaimbot_shellcode(
 			mango::Shellcode::prologue<false>(),
 
-			// call the original createmove
-			"\xFF\x75\x0C",							// push [ebp + 0xC]
-			"\xFF\x75\x08",							// push [ebp + 0x8]
-			"\xB8", orig_create_move,				// mov eax, orig_create_move
-			"\xFF\xD0",								// call eax
-
-			// local variables
-			// [ebp - 0x04] == localplayer			(uint32_t)
-			// [ebp - 0x08] == most_damage			(int)
-			// [ebp - 0x0C] == best_entity			(uint32_t)
-			// [ebp - 0x18] == aim_position			(vec3f)
-			// [ebp - 0x24] == tmp vector			(vec3f)
-			// [ebp - 0x30] == tmp vector			(vec3f)
+			// arguments:
+			// [ebp + 0x08] == localplayer
+			// [ebp + 0x0C] == cmd
+			// local variables:
+			// [ebp - 0x04] == most_damage
+			// [ebp - 0x08] == best_entity
+			// [ebp - 0x14] == aim_position
+			// [ebp - 0x20] == position
 			"\x83\xEC", uint8_t(					// sub esp, (size of local variables)
-				sizeof(uint32_t) +
 				sizeof(int) + 
 				sizeof(uint32_t) +
 				sizeof(mango::Vec3f) + 
-				sizeof(mango::Vec3f) + 
 				sizeof(mango::Vec3f)),
 
-			// get the localplayer index
-			"\xB9", uint32_t(						// mov ecx, engine_client
-				interfaces::engine_client),
-			"\x8B\x01",								// mov eax, [ecx]
-			"\xFF\x50", uint8_t(					// call [eax + get_local_player offset]
-				indices::get_local_player_index * 4), 
-
-			// get the localplayer
-			"\x50",									// push eax (localplayer index)
-			"\xB9", uint32_t(						// mov ecx, client_entity_list
-				interfaces::client_entity_list),
-			"\x8B\x01",								// mov eax, [ecx]
-			"\xFF\x50", uint8_t(					// call [eax + (get_client_entity offset)]
-				indices::get_client_entity * sizeof(uint32_t)),
-
-			// check if localplayer is dead
-			"\x83\xB8", uint32_t(					// cmp [eax + m_iHealth], 0
-				offsets::m_iHealth), "\x00",
-			"\x0F\x85", uint32_t(					// jnz (skip the return)
-				8),
-
-			// return false
-			"\x31\xC0",								// xor eax, eax
-			mango::Shellcode::epilogue<false>(),
-			mango::Shellcode::ret(8),
-
-			// store the localplayer in [ebp - 0x4]
-			"\x89\x45\xFC",							// mov [ebp - 0x4], eax
-
 			// set most_damage and best_entity to 0
+			"\xC7\x45\xFC\x00\x00\x00\x00",			// mov [ebp - 0x4], 0
 			"\xC7\x45\xF8\x00\x00\x00\x00",			// mov [ebp - 0x8], 0
-			"\xC7\x45\xF4\x00\x00\x00\x00",			// mov [ebp - 0xC], 0
 
 			// loop through every entity and call getdamage (above the createmove shellcode)
 			// ecx will hold the entity index
 			"\xB9\x01\x00\x00\x00",					// mov ecx, 1
-
+			
 			// this is the start of the loop
 			"\x51",									// push ecx
 
@@ -439,7 +417,7 @@ namespace {
 				69),																// FIX OFFSET
 
 			// check if same team
-			"\x8B\x55\xFC",							// mov edx, [ebp - 0x4]
+			"\x8B\x55\x08",							// mov edx, [ebp + 0x8] (localplayer)
 			"\x8B\x92", uint32_t(					// mov edx, [edx + m_iTeamNum]
 				offsets::m_iTeamNum),
 			"\x3B\x90", uint32_t(					// cmp edx, [eax + m_iTeamNum]
@@ -451,35 +429,35 @@ namespace {
 			"\x50",									// push eax
 
 			// get_damage(entity, &position)
-			"\x8D\x55\xDC",							// lea edx, [ebp - 0x24]
-			"\x52",									// push edx			(&position)
-			"\x50",									// push eax			(entity)
-			"\xFF\x75\xFC",							// push [ebp - 4]	(localplayer)
+			"\x8D\x55\xE0",							// lea edx, [ebp - 0x20]
+			"\x52",									// push edx				(&position)
+			"\x50",									// push eax				(entity)
+			"\xFF\x75\x08",							// push [ebp + 0x08]	(localplayer)
 			"\xE8", uint32_t(-int32_t(				// call get_damage
-				getdamage_shellcode.size() + 
-				5 + 172)),															// FIX OFFSET
+				getdamage_shellcode.size() +
+				5 + 114)),															// FIX OFFSET
 
 			// pop the entity into edx
 			"\x5A",									// pop edx
 
 			// if damage <= most_damage, skip to end
-			"\x3B\x45\xF8",							// cmp eax, [ebp - 0x08]
+			"\x3B\x45\xFC",							// cmp eax, [ebp - 0x04]
 			"\x0F\x8E", uint32_t(					// jle (end of loop)
 				24),																// FIX OFFSET
 
 			// set most_damage to damage
-			"\x89\x45\xF8",							// mov [ebp - 0x08], eax
+			"\x89\x45\xFC",							// mov [ebp - 0x04], eax
 
 			// set best_entity to entity
-			"\x89\x55\xF4",							// mov [ebp - 0x0C], edx
+			"\x89\x55\xF8",							// mov [ebp - 0x08], edx
 
 			// set aim_position to position
-			"\x8B\x45\xDC",							// mov eax, [ebp - 0x24]
-			"\x89\x45\xE8",							// mov [ebp - 0x18], eax
 			"\x8B\x45\xE0",							// mov eax, [ebp - 0x20]
 			"\x89\x45\xEC",							// mov [ebp - 0x14], eax
 			"\x8B\x45\xE4",							// mov eax, [ebp - 0x1C]
 			"\x89\x45\xF0",							// mov [ebp - 0x10], eax
+			"\x8B\x45\xE8",							// mov eax, [ebp - 0x18]
+			"\x89\x45\xF4",							// mov [ebp - 0x0C], eax
 
 			// increment the index and jump to start if < 64
 			"\x59",									// pop ecx
@@ -489,61 +467,131 @@ namespace {
 				-int32_t(6 + 133)),													// FIX OFFSET
 
 			// if best_entity is nullptr, return
-			"\x83\x7D\xF4\x00",						// cmp [ebp - 0x0C], 0
-			"\x75",	uint8_t(						// jne (past first return)
+			"\x83\x7D\xF8\x00",						// cmp [ebp - 0x08], 0
+			"\x75", uint8_t(						// jne (past first return)
 				8),
 
 			// return false
 			"\x31\xC0",								// xor eax, eax
 			mango::Shellcode::epilogue<false>(),
-			mango::Shellcode::ret(8),
+			mango::Shellcode::ret(0x8),
 
 			// copy localplayer m_vecOrigin into position local variable
-			"\x8B\x45\xFC",							// mov eax, [ebp - 0x4] (localplayer)
+			"\x8B\x45\x08",							// mov eax, [ebp + 0x8] (localplayer)
 			"\x8B\x90", uint32_t(					// mov edx, [eax + m_vecOrigin]
 				offsets::m_vecOrigin),
-			"\x89\x55\xDC",							// mov [ebp - 0x24], edx
+			"\x89\x55\xE0",							// mov [ebp - 0x20], edx
 			"\x8B\x90", uint32_t(					// mov edx, [eax + m_vecOrigin + 4]
 				offsets::m_vecOrigin + 4),
-			"\x89\x55\xE0",							// mov [ebp - 0x20], edx
+			"\x89\x55\xE4",							// mov [ebp - 0x1C], edx
 			"\x8B\x90", uint32_t(					// mov edx, [eax + m_vecOrigin + 8]
 				offsets::m_vecOrigin + 8),
-			"\x89\x55\xE4",							// mov [ebp - 0x1C], edx
-			
+			"\x89\x55\xE8",							// mov [ebp - 0x18], edx
+
 			// add m_vecViewOffset[2] to position[2] (eax is still localplayer at this point)
-			"\xF3\x0F\x10\x45\xE4",					// movss xmm0, [ebp - 0x1C]
+			"\xF3\x0F\x10\x45\xE8",					// movss xmm0, [ebp - 0x18]
 			"\xF3\x0F\x58\x80", uint32_t(			// addss xmm0, [eax + m_vecViewOffset + 8]
 				offsets::m_vecViewOffset + 8),
-			"\xF3\x0F\x11\x45\xE4",					// movss [ebp - 0x1C], xmm0
-			
+			"\xF3\x0F\x11\x45\xE8",					// movss [ebp - 0x18], xmm0
+
 			// position[0] = aim_position[0] - position[0]
-			"\xF3\x0F\x10\x45\xE8",					// movss xmm0, [ebp - 0x18]
-			"\xF3\x0F\x5C\x45\xDC",					// subss xmm0, [ebp - 0x24]
-			"\xF3\x0F\x11\x45\xDC",					// movss [ebp - 0x24], xmm0
-			
-			// position[1] = aim_position[1] - position[1]
 			"\xF3\x0F\x10\x45\xEC",					// movss xmm0, [ebp - 0x14]
 			"\xF3\x0F\x5C\x45\xE0",					// subss xmm0, [ebp - 0x20]
 			"\xF3\x0F\x11\x45\xE0",					// movss [ebp - 0x20], xmm0
 			
-			// position[2] = aim_position[2] - position[2]
+			// position[1] = aim_position[1] - position[1]
 			"\xF3\x0F\x10\x45\xF0",					// movss xmm0, [ebp - 0x10]
 			"\xF3\x0F\x5C\x45\xE4",					// subss xmm0, [ebp - 0x1C]
 			"\xF3\x0F\x11\x45\xE4",					// movss [ebp - 0x1C], xmm0
+			
+			// position[2] = aim_position[2] - position[2]
+			"\xF3\x0F\x10\x45\xF4",					// movss xmm0, [ebp - 0x0C]
+			"\xF3\x0F\x5C\x45\xE8",					// subss xmm0, [ebp - 0x18]
+			"\xF3\x0F\x11\x45\xE8",					// movss [ebp - 0x18], xmm0
 
 			// vectorangle(vector, vector)
 			"\x8B\x45\x0C",							// mov eax, [ebp + 0xC] (CUserCmd*)
 			"\x8D\x40\x0C",							// lea eax, [eax + 0xC] (viewangles)
 			"\x50",									// push eax
-			"\x8D\x45\xDC",							// lea eax, [ebp - 0x24]
+			"\x8D\x45\xE0",							// lea eax, [ebp - 0x20] (position)
 			"\x50",									// push eax
 			"\xE8", uint32_t(-int32_t(				// call vectorangle
-				vectorangle_shellcode.size() + 
-				getdamage_shellcode.size() + 
-				5 + 340)),															// FIX OFFSET
+				vectorangle_shellcode.size() +
+				fixmovement_shellcode.size() +
+				getdamage_shellcode.size() +
+				5 + 282)),															// FIX OFFSET
 
-			// MOVEMENT FIX STUFF:
-			
+			// set IN_ATTACK button state to true
+			"\x8B\x45\x0C",							// mov eax, [ebp + 0xC] (CUserCmd*)
+			"\x83\x48\x30\x01",						// or [eax + 0x30], 0x1 (IN_ATTACK)
+
+			mango::Shellcode::epilogue<false>(),
+			mango::Shellcode::ret(0x8)
+		);
+
+		// CreateMove hook
+		mango::Shellcode createmove_shellcode(
+
+			mango::Shellcode::prologue<false>(),
+
+			// call the original createmove
+			"\xFF\x75\x0C",							// push [ebp + 0xC]
+			"\xFF\x75\x08",							// push [ebp + 0x8]
+			"\xB8", orig_create_move,				// mov eax, orig_create_move
+			"\xFF\xD0",								// call eax
+
+			// local variables
+			// [ebp - 0x04] == localplayer	
+			// [ebp - 0x08] == most_damage	
+			// [ebp - 0x0C] == best_entity	
+			// [ebp - 0x18] == aim_position	
+			// [ebp - 0x24] == tmp vector	
+			// [ebp - 0x30] == tmp vector	
+			"\x83\xEC", uint8_t(					// sub esp, (size of local variables)
+				sizeof(uint32_t) +
+				sizeof(int) + 
+				sizeof(uint32_t) +
+				sizeof(mango::Vec3f) + 
+				sizeof(mango::Vec3f) + 
+				sizeof(mango::Vec3f)),
+
+			// get the localplayer index
+			"\xB9", uint32_t(						// mov ecx, engine_client
+				interfaces::engine_client),
+			"\x8B\x01",								// mov eax, [ecx]
+			"\xFF\x50", uint8_t(					// call [eax + get_local_player offset]
+				indices::get_local_player_index * 4), 
+
+			// get the localplayer
+			"\x50",									// push eax (localplayer index)
+			"\xB9", uint32_t(						// mov ecx, client_entity_list
+				interfaces::client_entity_list),
+			"\x8B\x01",								// mov eax, [ecx]
+			"\xFF\x50", uint8_t(					// call [eax + (get_client_entity offset)]
+				indices::get_client_entity * sizeof(uint32_t)),
+
+			// check if localplayer is dead
+			"\x83\xB8", uint32_t(					// cmp [eax + m_iHealth], 0
+				offsets::m_iHealth), "\x00",
+			"\x0F\x85", uint32_t(					// jnz (skip the return)
+				8),
+
+			// return false
+			"\x31\xC0",								// xor eax, eax
+			mango::Shellcode::epilogue<false>(),
+			mango::Shellcode::ret(0x8),
+
+			// store the localplayer in [ebp - 0x4]
+			"\x89\x45\xFC",							// mov [ebp - 0x4], eax
+
+			// AIMBOT:
+			"\xFF\x75\x0C",							// push [ebp + 0xC] (cmd)
+			"\xFF\x75\xFC",							// push [ebp - 0x4] (localplayer)
+			"\xE8", uint32_t(-int32_t(				// call runaimbot
+				runaimbot_shellcode.size() +
+				5 + 70)),															// FIX OFFSET
+
+			// MOVEMENT FIX:	
 			// [ebp - 0x24] = vectorangle(cmd->movement)
 			"\x8D\x45\xDC",							// lea eax, [ebp - 0x24]
 			"\x50",									// push eax
@@ -552,8 +600,10 @@ namespace {
 			"\x50",									// push eax
 			"\xE8", uint32_t(-int32_t(				// call vectorangle
 				vectorangle_shellcode.size() +
+				fixmovement_shellcode.size() +
 				getdamage_shellcode.size() +
-				5 + 356)),															// FIX OFFSET
+				runaimbot_shellcode.size() +
+				5 + 86)),															// FIX OFFSET
 				
 			// [ebp - 0x30] = Engine->GetViewAngles()
 			"\x8D\x45\xD0",							// lea eax, [ebp - 0x30]
@@ -649,22 +699,39 @@ namespace {
 		vectorangle_shellcode.write(globals::process, create_move_shellcode_addr 
 			+ atan2_shellcode.size());
 
+		// fixmovement
+		fixmovement_shellcode.write(globals::process, create_move_shellcode_addr +
+			atan2_shellcode.size() +
+			vectorangle_shellcode.size());
+
 		// getdamage
 		getdamage_shellcode.write(globals::process, create_move_shellcode_addr + 
 			atan2_shellcode.size() +
-			vectorangle_shellcode.size());
+			vectorangle_shellcode.size() +
+			fixmovement_shellcode.size());
+
+		// runaimbot
+		runaimbot_shellcode.write(globals::process, create_move_shellcode_addr +
+			atan2_shellcode.size() +
+			vectorangle_shellcode.size() +
+			fixmovement_shellcode.size() +
+			getdamage_shellcode.size());
 
 		// createmove
 		createmove_shellcode.write(globals::process, create_move_shellcode_addr + 
 			atan2_shellcode.size() +
 			vectorangle_shellcode.size() + 
-			getdamage_shellcode.size());
+			fixmovement_shellcode.size() +
+			getdamage_shellcode.size() +
+			runaimbot_shellcode.size());
 
 		// hook the function
 		client_mode_hook.hook(indices::create_move, create_move_shellcode_addr +
 			atan2_shellcode.size() +
 			vectorangle_shellcode.size() +
-			getdamage_shellcode.size());
+			fixmovement_shellcode.size() +
+			getdamage_shellcode.size() +
+			runaimbot_shellcode.size());
 	}
 } // namespace
 
