@@ -138,8 +138,6 @@ void run_cheat() {
 			// this updates often (probably when objects are added/removed)
 			globals::glow_object_manager.update_object_definitions();
 
-			mango::logger.info(interfaces::engine_client.get_view_angles());
-
 			// iterate over every player
 			for (int i = 1; i < 64; ++i) {
 				const auto entity = interfaces::client_entity_list.get_client_entity(i);

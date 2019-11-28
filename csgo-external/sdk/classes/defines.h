@@ -146,9 +146,7 @@ namespace sdk {
 		int tick_count;
 		mango::Vec3f viewangles;
 		mango::Vec3f aimdirection;
-		float forwardmove;
-		float sidemove;
-		float upmove;
+		mango::Vec3f movement;
 		int buttons;
 		uint8_t impulse;
 		int weaponselect;
