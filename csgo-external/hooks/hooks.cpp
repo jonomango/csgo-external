@@ -302,8 +302,95 @@ namespace {
 			// arguments:
 			// [ebp + 0x08] == cmd
 			// local variables:
+			// [ebp - 0x0C] == movement angles
+			// [ebp - 0x18] == engine viewangles
 			"\x83\xEC", uint8_t(					// sub esp, (size of local variables)
-				0),
+				sizeof(mango::Vec3f) +
+				sizeof(mango::Vec3f)),
+
+			// [ebp - 0x0C] = vectorangle(cmd->movement)
+			"\x8D\x45\xF4",							// lea eax, [ebp - 0x0C]
+			"\x50",									// push eax
+			"\x8B\x45\x08",							// mov eax, [ebp + 0x8] (CUserCmd*)
+			"\x8D\x40\x24",							// lea eax, [eax + 0x24] (movement)
+			"\x50",									// push eax
+			"\xE8", uint32_t(-int32_t(				// call vectorangle
+				vectorangle_shellcode.size() +
+				5 + 17)),															// FIX OFFSET
+
+			// [ebp - 0x18] = Engine->GetViewAngles()
+			"\x8D\x45\xE8",							// lea eax, [ebp - 0x18]
+			"\x50",									// push eax
+			"\xB9", uint32_t(						// mov ecx, engine_client
+				interfaces::engine_client),
+			"\x8B\x01",								// mov eax, [ecx]
+			"\xFF\x90", uint32_t(					// call [eax + (get_view_angles offset)]
+				indices::get_view_angles * 4),
+
+			// xmm0 = cmd->viewangles[1]
+			"\x8B\x45\x08",							// mov eax, [ebp + 0x8] (CUserCmd*)
+			"\xF3\x0F\x10\x40\x10",					// movss xmm0, [eax + 0x10]
+
+			// xmm0 -= engine_angles[1]
+			"\xF3\x0F\x5C\x45\xEC",					// subss xmm0, [ebp - 0x14]
+
+			// xmm0 += movement_angle[1]
+			"\xF3\x0F\x58\x45\xF8",					// addss xmm0, [ebp - 0x08]
+
+			// xmm0 *= 0.01745329251f (pi / 180)
+			"\x68\x35\xFA\x8E\x3C",					// push 0.01745329251f
+			"\xF3\x0F\x59\x04\x24",					// mulss xmm0, [esp]
+			"\x58",									// pop eax
+
+			// xmm1 = cmd->movement[0] * cmd->movement[0]
+			"\x8B\x45\x08",							// mov eax, [ebp + 0x8] (CUserCmd*)
+			"\xF3\x0F\x10\x48\x24",					// movss xmm1, [eax + 0x24] (cmd->movement[0])
+			"\xF3\x0F\x59\xC9",						// mulss xmm1, xmm1
+
+			// xmm2 = cmd->movement[1] * cmd->movement[1]
+			"\xF3\x0F\x10\x50\x28",					// movss xmm2, [eax + 0x28] (cmd->movement[1])
+			"\xF3\x0F\x59\xD2",						// mulss xmm2, xmm2
+
+			// xmm1 += xmm2
+			"\xF3\x0F\x58\xCA",						// addss xmm1, xmm2
+
+			// xmm2 = sqrt(xmm1)
+			"\xF3\x0F\x51\xD1",						// sqrtss xmm2, xmm1
+
+			// allocate space on stack
+			"\x50",									// push eax
+
+			// calculate the sin and cos of angle
+			"\xF3\x0F\x11\x04\x24",					// movss [esp], xmm0
+			"\xD9\x04\x24",							// fld [esp]
+			"\xD9\xFB",								// fsincos
+
+			// cos in xmm1
+			"\xD9\x1C\x24",							// fstp [esp]
+			"\xF3\x0F\x10\x0C\x24",					// movss xmm1, [esp]
+
+			// sin in xmm0
+			"\xD9\x1C\x24",							// fstp [esp]
+			"\xF3\x0F\x10\x04\x24",					// movss xmm0, [esp]
+
+			// clean up stack
+			"\x58",									// pop eax
+
+			// xmm3 = xmm2 * xmm1(cos)
+			"\xF3\x0F\x10\xDA",						// movss xmm3, xmm2
+			"\xF3\x0F\x59\xD9",						// mulss xmm3, xmm1
+
+			// xmm2 *= xmm0(sin)
+			"\xF3\x0F\x59\xD0",						// mulss xmm2, xmm0
+
+			// mov CUserCmd* into eax
+			"\x8B\x45\x08",							// mov eax, [ebp + 0x8] (CUserCmd*)
+
+			// cmd->movement[0] = xmm3
+			"\xF3\x0F\x11\x58\x24",					// movss [eax + 0x24], xmm3
+
+			// cmd->movement[1] = xmm2
+			"\xF3\x0F\x11\x50\x28",					// movss [eax + 0x28], xmm2
 
 			mango::Shellcode::epilogue<false>(),
 			mango::Shellcode::ret(0x4)
@@ -343,8 +430,8 @@ namespace {
 				offsets::m_vecOrigin + 8),
 			"\x89\x53\x08",							// mov [ebx + 8], edx
 
-			// add 35.f to the z component
-			"\x68", uint32_t(0x420c0000),			// push 35.f
+			// position[0] += 40.f
+			"\x68", uint32_t(0x42200000),			// push 40.f
 			"\xF3\x0F\x10\x43\x08",					// movss xmm0, [ebx + 8]
 			"\xF3\x0F\x58\x04\x24",					// addss xmm0, [esp]
 			"\xF3\x0F\x11\x43\x08",					// movss [ebx + 8], xmm0
@@ -529,7 +616,58 @@ namespace {
 			mango::Shellcode::ret(0x8)
 		);
 
-		// CreateMove hook
+		// void runantiaim(CBaseEntity* localplayer, CUserCmd* cmd)
+		mango::Shellcode runantiaim_shellcode(
+			mango::Shellcode::prologue<false>(),
+
+			// arguments:
+			// [ebp + 0x08] == localplayer
+			// [ebp + 0x0C] == cmd
+			// local variables:
+			// [ebp - 0x0C] == viewangles
+			"\x83\xEC", uint8_t(					// sub esp, (size of local variables)
+				sizeof(mango::Vec3f)),
+
+			// [ebp - 0x0C] = Engine->GetViewAngles()
+			"\x8D\x45\xF4",							// lea eax, [ebp - 0x0C]
+			"\x50",									// push eax
+			"\xB9", uint32_t(						// mov ecx, engine_client
+				interfaces::engine_client),
+			"\x8B\x01",								// mov eax, [ecx]
+			"\xFF\x90", uint32_t(					// call [eax + (get_view_angles offset)]
+				indices::get_view_angles * 4),
+
+			// viewangles[0] = 89.f
+			"\xC7\x45\xF4\x00\x00\xB2\x42",			// mov [ebp - 0x0C], 89.f
+
+			// xmm0 = viewangles[1]
+			"\xF3\x0F\x10\x45\xF8",					// movss xmm0, [ebp - 0x08]
+
+			// xmm0 += 180.f
+			"\x68\x00\x00\x34\x43",					// push 180.f
+			"\xF3\x0F\x58\x04\x24",					// addss [esp]
+			"\x58",									// pop eax
+
+			// viewangles[1] = xmm0
+			"\xF3\x0F\x11\x45\xF8",					// movss [ebp - 0x08], xmm0
+
+			// ebx = &cmd->viewangles
+			"\x8B\x5D\x0C",							// mov ebx, [ebp + 0x0C]
+			"\x83\xC3\x0C",							// add ebx, 0x0C
+
+			// cmd->viewangles[0] = viewangles[0]
+			"\x8B\x55\xF4",							// mov edx, [ebp - 0x0C]
+			"\x89\x13",								// mov [ebx], edx
+
+			// cmd->viewangles[1] = viewangles[1]
+			"\x8B\x55\xF8",							// mov edx, [ebp - 0x08]
+			"\x89\x53\x04",							// mov [ebx + 0x04], edx
+
+			mango::Shellcode::epilogue<false>(),
+			mango::Shellcode::ret(0x8)
+		);
+
+		// bool createmove(float frametime, CUserCmd* cmd)
 		mango::Shellcode createmove_shellcode(
 
 			mango::Shellcode::prologue<false>(),
@@ -540,20 +678,13 @@ namespace {
 			"\xB8", orig_create_move,				// mov eax, orig_create_move
 			"\xFF\xD0",								// call eax
 
-			// local variables
+			// arguments:
+			// [ebp + 0x08] == frametime
+			// [ebp + 0x0C] == cmd
+			// local variables:
 			// [ebp - 0x04] == localplayer	
-			// [ebp - 0x08] == most_damage	
-			// [ebp - 0x0C] == best_entity	
-			// [ebp - 0x18] == aim_position	
-			// [ebp - 0x24] == tmp vector	
-			// [ebp - 0x30] == tmp vector	
 			"\x83\xEC", uint8_t(					// sub esp, (size of local variables)
-				sizeof(uint32_t) +
-				sizeof(int) + 
-				sizeof(uint32_t) +
-				sizeof(mango::Vec3f) + 
-				sizeof(mango::Vec3f) + 
-				sizeof(mango::Vec3f)),
+				sizeof(uint32_t)),
 
 			// get the localplayer index
 			"\xB9", uint32_t(						// mov ecx, engine_client
@@ -584,100 +715,29 @@ namespace {
 			// store the localplayer in [ebp - 0x4]
 			"\x89\x45\xFC",							// mov [ebp - 0x4], eax
 
-			// AIMBOT:
+			// runantiaim(localplayer, cmd)
+			"\xFF\x75\x0C",							// push [ebp + 0xC] (cmd)
+			"\xFF\x75\xFC",							// push [ebp - 0x4] (localplayer)
+			"\xE8", uint32_t(-int32_t(				// call runantiaim
+				runantiaim_shellcode.size() +
+				5 + 70)),															// FIX OFFSET
+
+			// runaimbot(localplayer, cmd)
 			"\xFF\x75\x0C",							// push [ebp + 0xC] (cmd)
 			"\xFF\x75\xFC",							// push [ebp - 0x4] (localplayer)
 			"\xE8", uint32_t(-int32_t(				// call runaimbot
+				runantiaim_shellcode.size() +
 				runaimbot_shellcode.size() +
-				5 + 70)),															// FIX OFFSET
+				5 + 81)),															// FIX OFFSET
 
-			// MOVEMENT FIX:	
-			// [ebp - 0x24] = vectorangle(cmd->movement)
-			"\x8D\x45\xDC",							// lea eax, [ebp - 0x24]
-			"\x50",									// push eax
-			"\x8B\x45\x0C",							// mov eax, [ebp + 0xC] (CUserCmd*)
-			"\x8D\x40\x24",							// lea eax, [eax + 0x24] (movement)
-			"\x50",									// push eax
-			"\xE8", uint32_t(-int32_t(				// call vectorangle
-				vectorangle_shellcode.size() +
-				fixmovement_shellcode.size() +
-				getdamage_shellcode.size() +
+			// fixmovement(cmd)
+			"\xFF\x75\x0C",							// push [ebp + 0xC] (cmd)
+			"\xE8", uint32_t(-int32_t(				// call fixmovement
+				runantiaim_shellcode.size() +
 				runaimbot_shellcode.size() +
-				5 + 86)),															// FIX OFFSET
-				
-			// [ebp - 0x30] = Engine->GetViewAngles()
-			"\x8D\x45\xD0",							// lea eax, [ebp - 0x30]
-			"\x50",									// push eax
-			"\xB9", uint32_t(						// mov ecx, engine_client
-				interfaces::engine_client),
-			"\x8B\x01",								// mov eax, [ecx]
-			"\xFF\x90", uint32_t(					// call [eax + (get_view_angles offset)]
-				indices::get_view_angles * 4),
-			
-			// xmm0 = cmd->viewangles[1]
-			"\x8B\x45\x0C",							// mov eax, [ebp + 0xC] (CUserCmd*)
-			"\xF3\x0F\x10\x40\x10",					// movss xmm0, [eax + 0x10]
-			
-			// xmm0 -= engine_angles[1]
-			"\xF3\x0F\x5C\x45\xD4",					// subss xmm0, [ebp - 0x2C]
-			
-			// xmm0 += movement_angle[1]
-			"\xF3\x0F\x58\x45\xE0",					// addss xmm0, [ebp - 0x20]
-			
-			// xmm0 *= 0.01745329251f (pi / 180)
-			"\x68\x35\xFA\x8E\x3C",					// push 0.01745329251f
-			"\xF3\x0F\x59\x04\x24",					// mulss xmm0, [esp]
-			"\x58",									// pop eax
-			
-			// xmm1 = cmd->movement[0] * cmd->movement[0]
-			"\x8B\x45\x0C",							// mov eax, [ebp + 0xC] (CUserCmd*)
-			"\xF3\x0F\x10\x48\x24",					// movss xmm1, [eax + 0x24] (movement[0])
-			"\xF3\x0F\x59\xC9",						// mulss xmm1, xmm1
-			
-			// xmm2 = cmd->movement[1] * cmd->movement[1]
-			"\xF3\x0F\x10\x50\x28",					// movss xmm2, [eax + 0x28] (movement[1])
-			"\xF3\x0F\x59\xD2",						// mulss xmm2, xmm2
-			
-			// xmm1 += xmm2
-			"\xF3\x0F\x58\xCA",						// addss xmm1, xmm2
-			
-			// xmm2 = sqrt(xmm1)
-			"\xF3\x0F\x51\xD1",						// sqrtss xmm2, xmm1
-			
-			// allocate space on stack
-			"\x50",									// push eax
-			
-			// calculate the sin and cos of angle
-			"\xF3\x0F\x11\x04\x24",					// movss [esp], xmm0
-			"\xD9\x04\x24",							// fld [esp]
-			"\xD9\xFB",								// fsincos
-			
-			// cos in xmm1
-			"\xD9\x1C\x24",							// fstp [esp]
-			"\xF3\x0F\x10\x0C\x24",					// movss xmm1, [esp]
-			
-			// sin in xmm0
-			"\xD9\x1C\x24",							// fstp [esp]
-			"\xF3\x0F\x10\x04\x24",					// movss xmm0, [esp]
-			
-			// clean up stack
-			"\x58",									// pop eax
-			
-			// xmm3 = xmm2 * xmm1(cos)
-			"\xF3\x0F\x10\xDA",						// movss xmm3, xmm2
-			"\xF3\x0F\x59\xD9",						// mulss xmm3, xmm1
-			
-			// xmm2 *= xmm0(sin)
-			"\xF3\x0F\x59\xD0",						// mulss xmm2, xmm0
-			
-			// eax holds CUserCmd*
-			"\x8B\x45\x0C",							// mov eax, [ebp + 0xC] (CUserCmd*)
-			
-			// cmd->movement[0] = xmm3
-			"\xF3\x0F\x11\x58\x24",					// movss [eax + 0x24], xmm3
-			
-			// cmd->movement[1] = xmm2
-			"\xF3\x0F\x11\x50\x28",					// movss [eax + 0x28], xmm2
+				getdamage_shellcode.size() +
+				fixmovement_shellcode.size() +
+				5 + 89)),															// FIX OFFSET
 			
 			// return false
 			"\x31\xC0",								// xor eax, eax
@@ -689,7 +749,10 @@ namespace {
 		create_move_shellcode_addr = uint32_t(uintptr_t(globals::process.alloc_virt_mem(
 			atan2_shellcode.size() +
 			vectorangle_shellcode.size() + 
+			fixmovement_shellcode.size() +
 			getdamage_shellcode.size() + 
+			runaimbot_shellcode.size() +
+			runantiaim_shellcode.size() +
 			createmove_shellcode.size(), PAGE_EXECUTE_READWRITE)));
 
 		// atan2
@@ -717,13 +780,22 @@ namespace {
 			fixmovement_shellcode.size() +
 			getdamage_shellcode.size());
 
+		// runantiaim
+		runantiaim_shellcode.write(globals::process, create_move_shellcode_addr +
+			atan2_shellcode.size() +
+			vectorangle_shellcode.size() +
+			fixmovement_shellcode.size() +
+			getdamage_shellcode.size() +
+			runaimbot_shellcode.size());
+
 		// createmove
 		createmove_shellcode.write(globals::process, create_move_shellcode_addr + 
 			atan2_shellcode.size() +
 			vectorangle_shellcode.size() + 
 			fixmovement_shellcode.size() +
 			getdamage_shellcode.size() +
-			runaimbot_shellcode.size());
+			runaimbot_shellcode.size() +
+			runantiaim_shellcode.size());
 
 		// hook the function
 		client_mode_hook.hook(indices::create_move, create_move_shellcode_addr +
@@ -731,7 +803,8 @@ namespace {
 			vectorangle_shellcode.size() +
 			fixmovement_shellcode.size() +
 			getdamage_shellcode.size() +
-			runaimbot_shellcode.size());
+			runaimbot_shellcode.size() +
+			runantiaim_shellcode.size());
 	}
 } // namespace
 
