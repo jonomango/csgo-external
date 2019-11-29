@@ -461,6 +461,43 @@ namespace {
 				sizeof(mango::Vec3f) + 
 				sizeof(mango::Vec3f)),
 
+			// ebx = localplayer->m_hActiveWeapon
+			"\x8B\x5D\x08",							// mov ebx, [ebp + 0x08] (localplayer)
+			"\x8B\x9B", uint32_t(					// mov ebx, [ebx + m_hActiveWeapon]
+				offsets::m_hActiveWeapon),
+
+			// get the active weapon
+			"\x81\xE3\xFF\x0F\x00\x00",				// and ebx, 0xFFF
+			"\x53",									// push ebx
+			"\xB9", uint32_t(						// mov ecx, client_entity_list
+				interfaces::client_entity_list),
+			"\x8B\x01",								// mov eax, [ecx]
+			"\xFF\x90", uint32_t(					// call [eax + (get_client_entity offset)]
+				indices::get_client_entity * 4),
+
+			// xmm0 = interval_per_tick
+			"\xF3\x0F\x10\x05", uint32_t(			// movss xmm0, interval_per_tick
+				globals::global_vars_base + offsetof(GlobalVarsBase, interval_per_tick)),
+
+			// xmm1 = localplayer->m_nTickbase
+			"\x8B\x5D\x08",							// mov ebx, [ebp + 0x08] (localplayer)
+			"\xF3\x0F\x2A\x8B", uint32_t(			// cvtsi2ss xmm1, [ebx + m_nTickBase]
+				offsets::m_nTickBase),
+
+			// xmm0 *= xmm1
+			"\xF3\x0F\x59\xC1",						// mulss xmm0, xmm1
+
+			// ucomiss xmm0, localplayer->m_flNextPrimaryAttack
+			"\x0F\x2E\x80", uint32_t(
+				offsets::m_flNextPrimaryAttack),
+			"\x0F\x83", uint32_t(					// jae (past return)
+				8),
+
+			// return false
+			"\x31\xC0",								// xor eax, eax
+			mango::Shellcode::epilogue<false>(),
+			mango::Shellcode::ret(0x8),
+
 			// set most_damage and best_entity to 0
 			"\xC7\x45\xFC\x00\x00\x00\x00",			// mov [ebp - 0x4], 0
 			"\xC7\x45\xF8\x00\x00\x00\x00",			// mov [ebp - 0x8], 0
@@ -522,7 +559,7 @@ namespace {
 			"\xFF\x75\x08",							// push [ebp + 0x08]	(localplayer)
 			"\xE8", uint32_t(-int32_t(				// call get_damage
 				getdamage_shellcode.size() +
-				5 + 114)),															// FIX OFFSET
+				5 + 187)),															// FIX OFFSET
 
 			// pop the entity into edx
 			"\x5A",									// pop edx
@@ -606,7 +643,7 @@ namespace {
 				vectorangle_shellcode.size() +
 				fixmovement_shellcode.size() +
 				getdamage_shellcode.size() +
-				5 + 282)),															// FIX OFFSET
+				5 + 355)),															// FIX OFFSET
 
 			// set IN_ATTACK button state to true
 			"\x8B\x45\x0C",							// mov eax, [ebp + 0xC] (CUserCmd*)
@@ -669,7 +706,6 @@ namespace {
 
 		// bool createmove(float frametime, CUserCmd* cmd)
 		mango::Shellcode createmove_shellcode(
-
 			mango::Shellcode::prologue<false>(),
 
 			// call the original createmove

@@ -5,6 +5,7 @@
 
 
 namespace sdk {
+	// not really accurate, most of this stuff should be spread out into C_BasePlayer, C_CSPlayer, C_BaseAnimating, DT_BaseCombatCharacter, ...
 	// https://github.com/ValveSoftware/source-sdk-2013/blob/master/sp/src/game/client/c_baseentity.h#L174
 	class BaseEntity {
 	public:
@@ -50,7 +51,16 @@ namespace sdk {
 		// only the z component is nonzero afaik
 		mango::Vec3f get_view_offset() const;
 
-	private:
+		// only applies to localplayer
+		int get_tick_base() const;
+
+		// this returns the active weapon INDEX
+		int get_active_weapon() const;
+
+		// recoil
+		mango::Vec3f get_aim_punch() const;
+
+	protected:
 		uint32_t m_address = 0;
 	};
 } // namespace sdk

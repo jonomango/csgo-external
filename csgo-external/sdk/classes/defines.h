@@ -104,7 +104,7 @@ namespace sdk {
 		uint8_t m_padding_2[24];
 	};
 
-	// a "map" of variables
+	// https://github.com/ValveSoftware/source-sdk-2013/blob/master/sp/src/public/datamap.h
 	struct Datamap {
 		uint32_t m_data_fields; // TypeDescription*
 		uint32_t m_num_fields;
@@ -155,5 +155,21 @@ namespace sdk {
 		short mousedx;
 		short mousedy;
 		bool hasbeenpredicted;
+	};
+
+	// https://github.com/ValveSoftware/source-sdk-2013/blob/master/mp/src/public/globalvars_base.h
+	struct GlobalVarsBase {
+		float realtime;
+		int	framecount;
+		float absoluteframetime;
+	private:
+		uint8_t m_padding[0x4];
+	public:
+		float curtime;
+		float frametime;
+		int maxclients;
+		int	tickcount;
+		float interval_per_tick;
+		float interpolation_amount;
 	};
 } // namespace sdk

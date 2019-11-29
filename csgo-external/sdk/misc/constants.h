@@ -16,6 +16,9 @@ namespace sdk {
 	namespace globals {
 		inline mango::Process process;
 
+		// https://github.com/ValveSoftware/source-sdk-2013/blob/master/mp/src/public/globalvars_base.h
+		inline uint32_t global_vars_base;
+
 		// https://github.com/ValveSoftware/source-sdk-2013/blob/master/mp/src/game/client/glow_outline_effect.cpp
 		inline GlowObjectManager glow_object_manager;
 
@@ -25,9 +28,10 @@ namespace sdk {
 		// https://github.com/VSES/SourceEngine2007/blob/master/se2007/engine/baseclientstate.h
 		inline uint32_t client_state;
 
+		// the head node to a linked list of ClientClass pointers
 		inline uint32_t client_class_head;
 
-		// not sure what to name this but whatever
+		// not sure what this is but whatever
 		inline uint32_t material_name_related_var;
 	} // namespace globals
 	namespace interfaces {
@@ -55,11 +59,16 @@ namespace sdk {
 		inline uint32_t m_angEyeAngles;
 		inline uint32_t m_bGunGameImmunity;
 		inline uint32_t m_flFlashDuration;
+		inline uint32_t m_nTickBase;
+		inline uint32_t m_hActiveWeapon;
+		inline uint32_t m_flNextPrimaryAttack;
+
+		// datamap fields
+		inline uint32_t m_Local;
 		inline uint32_t m_vecViewOffset;
+		inline uint32_t m_aimPunchAngle;	
 
-		// datamap
-
-		// HARDCODED
+		// hardcoded
 		const inline uint32_t m_bDormant = 0xED;
 
 	} // namespace offsets
@@ -73,6 +82,7 @@ namespace sdk {
 		const inline uint32_t is_in_game = 26;
 
 		// VClient 
+		const inline uint32_t init = 0;
 		const inline uint32_t get_all_classes = 8;
 		const inline uint32_t hud_process_input = 10;
 

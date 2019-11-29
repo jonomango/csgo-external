@@ -8,8 +8,9 @@
 #include <crypto/string_encryption.h>
 
 #include "sdk/misc/constants.h"
-#include "hooks/hooks.h"
+#include "sdk/classes/base_combat_weapon.h"
 
+#include "hooks/hooks.h"
 #include "features/glow.h"
 #include "features/nightmode.h"
 

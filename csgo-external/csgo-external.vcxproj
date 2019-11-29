@@ -156,6 +156,7 @@
     <ClCompile Include="features\nightmode.cpp" />
     <ClCompile Include="hooks\hooks.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="sdk\classes\base_combat_weapon.cpp" />
     <ClCompile Include="sdk\classes\base_entity.cpp" />
     <ClCompile Include="sdk\classes\client.cpp" />
     <ClCompile Include="sdk\classes\engine_client.cpp" />
@@ -174,6 +175,7 @@
     <ClInclude Include="features\glow.h" />
     <ClInclude Include="features\nightmode.h" />
     <ClInclude Include="hooks\hooks.h" />
+    <ClInclude Include="sdk\classes\base_combat_weapon.h" />
     <ClInclude Include="sdk\classes\base_entity.h" />
     <ClInclude Include="sdk\classes\client.h" />
     <ClInclude Include="sdk\classes\client_entity_list.h" />

@@ -59,9 +59,24 @@ namespace sdk {
 	int BaseEntity::get_glow_index() const {
 		return globals::process.read<int>(this->m_address + offsets::m_iGlowIndex);
 	}
+
 	// only the z component is nonzero afaik
 	mango::Vec3f BaseEntity::get_view_offset() const {
 		return globals::process.read<mango::Vec3f>(this->m_address + offsets::m_vecViewOffset);
 	}
 
+	// only applies to localplayer
+	int BaseEntity::get_tick_base() const {
+		return globals::process.read<int>(this->m_address + offsets::m_nTickBase);
+	}
+
+	// this returns the active weapon INDEX
+	int BaseEntity::get_active_weapon() const {
+		return globals::process.read<int>(this->m_address + offsets::m_hActiveWeapon) & 0xFFF;
+	}
+
+	// recoil
+	mango::Vec3f BaseEntity::get_aim_punch() const {
+		return globals::process.read<mango::Vec3f>(this->m_address + offsets::m_Local + offsets::m_aimPunchAngle);
+	}
 } // namespace sdk

@@ -48,15 +48,15 @@ namespace sdk {
 		for (size_t i = 0; i < recv_table.m_num_props; ++i) {
 			const auto prop = globals::process.read<RecvProp>(recv_table.m_props_array + sizeof(RecvProp) * i);
 
-			char prop_name[256];
-			globals::process.read(prop.m_name, prop_name, 256);
-			prop_name[255] = '\0';
-
 			// frog in a frog
 			if (prop.m_type == DPT_DataTable) {
 				this->parse_table(prop.m_recv_table);
 				continue;
 			}
+
+			char prop_name[256];
+			globals::process.read(prop.m_name, prop_name, 256);
+			prop_name[255] = '\0';
 
 			const auto hash = mango::fnv1a<uint64_t>((std::string(table_name) + ":" + prop_name).c_str());
 			this->m_netvars[hash] = prop.m_offset;
