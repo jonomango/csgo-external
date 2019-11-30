@@ -634,7 +634,7 @@ namespace {
 			"\xF3\x0F\x11\x45\xE8",					// movss [ebp - 0x18], xmm0
 
 			// vectorangle(vector, vector)
-			"\x8B\x45\x0C",							// mov eax, [ebp + 0xC] (CUserCmd*)
+			"\x8B\x45\x0C",							// mov eax, [ebp + 0xC] (cmd)
 			"\x8D\x40\x0C",							// lea eax, [eax + 0xC] (viewangles)
 			"\x50",									// push eax
 			"\x8D\x45\xE0",							// lea eax, [ebp - 0x20] (position)
@@ -644,9 +644,36 @@ namespace {
 				fixmovement_shellcode.size() +
 				getdamage_shellcode.size() +
 				5 + 355)),															// FIX OFFSET
+					
+			// xmm1 = 2.f
+			"\x68\x00\x00\x00\x40",					// push 2.f
+			"\xF3\x0F\x10\x14\x24",					// movss xmm2, [esp]
+			"\x58",									// pop eax
+
+			// eax = localplayer
+			// ebx = &cmd->viewangles
+			"\x8B\x45\x08",							// mov eax, [ebp + 0x8] (localplayer)
+			"\x8B\x5D\x0C",							// mov ebx, [ebp + 0xC] (cmd)
+			"\x83\xC3\x0C",							// add ebx, 0xC (offsetof(CUserCmd, viewangles))
+
+			// cmd->viewangles[0] -= localplayer->m_aimPunchAngle[0] * 2.f
+			"\xF3\x0F\x10\x88", uint32_t(			// movss xmm1, [eax + m_aimPunchAngle]
+				offsets::m_Local + offsets::m_aimPunchAngle),
+			"\xF3\x0F\x59\xCA",						// mulss xmm1, xmm2
+			"\xF3\x0F\x10\x03",						// movss xmm0, [ebx] (cmd->viewangles[0])
+			"\xF3\x0F\x5C\xC1",						// subss xmm0, xmm1
+			"\xF3\x0F\x11\x03",						// movss [ebx], xmm0 (cmd->viewangles[0])
+
+			// cmd->viewangles[1] -= localplayer->m_aimPunchAngle[1] * 2.f
+			"\xF3\x0F\x10\x88", uint32_t(			// movss xmm1, [eax + m_aimPunchAngle + 4]
+				offsets::m_Local + offsets::m_aimPunchAngle + 4),
+			"\xF3\x0F\x59\xCA",						// mulss xmm1, xmm2
+			"\xF3\x0F\x10\x43\x04",					// movss xmm0, [ebx + 4] (cmd->viewangles[1])
+			"\xF3\x0F\x5C\xC1",						// subss xmm0, xmm1
+			"\xF3\x0F\x11\x43\x04",					// movss [ebx + 4], xmm0 (cmd->viewangles[1])
 
 			// set IN_ATTACK button state to true
-			"\x8B\x45\x0C",							// mov eax, [ebp + 0xC] (CUserCmd*)
+			"\x8B\x45\x0C",							// mov eax, [ebp + 0xC] (cmd)
 			"\x83\x48\x30\x01",						// or [eax + 0x30], 0x1 (IN_ATTACK)
 
 			mango::Shellcode::epilogue<false>(),
