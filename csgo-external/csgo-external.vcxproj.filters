@@ -66,6 +66,9 @@
     <ClCompile Include="sdk\classes\base_combat_weapon.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="sdk\classes\engine_trace.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="sdk\classes\client_entity_list.h">
@@ -123,6 +126,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="sdk\classes\base_combat_weapon.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\classes\engine_trace.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -8,6 +8,7 @@
 #include "../classes/engine_cvar.h"
 #include "../classes/material_system.h"
 #include "../classes/glow_object_manager.h"
+#include "../classes/engine_trace.h"
 
 
 namespace sdk {
@@ -40,6 +41,7 @@ namespace sdk {
 		inline ClientEntityList client_entity_list;
 		inline EngineCvar engine_cvar;
 		inline MaterialSystem material_system;
+		inline EngineTrace engine_trace;
 	} // namespace interfaces
 	namespace offsets {
 		inline uint32_t client_state_local_player_index;
@@ -85,6 +87,9 @@ namespace sdk {
 		const inline uint32_t init = 0;
 		const inline uint32_t get_all_classes = 8;
 		const inline uint32_t hud_process_input = 10;
+
+		// EngineTraceClient
+		const inline uint32_t trace_ray = 5;
 
 		// IClientMode
 		const inline uint32_t create_move = 24;

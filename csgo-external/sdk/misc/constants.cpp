@@ -16,12 +16,13 @@ namespace sdk {
 		interface_cache.cache();
 
 		// set interfaces
-		interfaces::client = Client::create(interface_cache);
-		interfaces::engine_client = EngineClient::create(interface_cache);
-		interfaces::client_entity_list = ClientEntityList::create(interface_cache);
-		interfaces::engine_cvar = EngineCvar::create(interface_cache);
-		interfaces::material_system = MaterialSystem::create(interface_cache);
-		
+		interfaces::client.create_interface(interface_cache);
+		interfaces::engine_client.create_interface(interface_cache);
+		interfaces::client_entity_list.create_interface(interface_cache);
+		interfaces::engine_cvar.create_interface(interface_cache);
+		interfaces::material_system.create_interface(interface_cache);
+		interfaces::engine_trace.create_interface(interface_cache);
+
 		mango::logger.success(enc_str("Found interfaces."));
 
 		// ref @IMaterial::GetName and @IMaterial::GetTextureGroupName

@@ -30,6 +30,40 @@ namespace {
 		const auto float_str_addr = uint32_t(uintptr_t(globals::process.alloc_virt_mem(float_str.size() + 1)));
 		globals::process.write(float_str_addr, float_str.data(), float_str.size() + 1);
 
+		struct AimbotTraceFilter {
+			uint64_t m_should_hit_entity;
+			uint32_t m_get_trace_type;
+			uint32_t m_vtable[2];
+			uint32_t m_vtable_ptr;
+		};
+
+		// this cant be on the stack cuz of noexecute
+		const auto trace_filter_addr = uint32_t(uintptr_t(globals::process.alloc_virt_mem(sizeof(AimbotTraceFilter), PAGE_EXECUTE_READWRITE)));
+		const auto trace_filter_thisptr = trace_filter_addr + offsetof(AimbotTraceFilter, m_vtable_ptr);
+
+		// manually construct the vtable and functions for our tracefilter (i dont account for the RTTICompleteObjectLocator before the vtable but that's unnecessary)
+		{
+			AimbotTraceFilter trace_filter;
+
+			//   31C0	xor eax, eax
+			// C20800	ret 0x8
+			trace_filter.m_should_hit_entity = 0x0008C2'C031;
+
+			//	 31C0	xor eax, eax
+			//	   C3	ret
+			trace_filter.m_get_trace_type = 0xC3'C031; // TRACE_EVERYTHING = 0
+
+			// set the vtable entries to point to our functions
+			trace_filter.m_vtable[0] = trace_filter_addr + offsetof(AimbotTraceFilter, m_should_hit_entity);
+			trace_filter.m_vtable[1] = trace_filter_addr + offsetof(AimbotTraceFilter, m_get_trace_type);
+
+			// point to the vtable
+			trace_filter.m_vtable_ptr = trace_filter_addr + offsetof(AimbotTraceFilter, m_vtable);
+
+			// write
+			globals::process.write(trace_filter_addr, trace_filter);
+		}
+
 		// void print_vector(vec3* vector)
 		const auto print_vector = mango::Shellcode(
 			mango::Shellcode::prologue<false>(),
@@ -396,15 +430,127 @@ namespace {
 			mango::Shellcode::ret(0x4)
 		);
 
-		// returns the amount of damage and sets position
-		// int getdamage(CBaseEntity* localplayer, CBaseEntity* entity, vec3* position)
+		// int getdamage(CBaseEntity* localplayer, CBaseEntity* entity, vec3* eyeposition, vec3* position)
 		mango::Shellcode getdamage_shellcode(
+			mango::Shellcode::prologue<false>(),
+
+			// arguments:
+			// [ebp + 0x08]			== localplayer
+			// [ebp + 0x0C]			== entity
+			// [ebp + 0x10]			== eyeposition
+			// [ebp + 0x14]			== position
+			// local variables:
+			// [ebp - 0x54]			== trace
+			// [ebp - 0xA4] & -16	== ray (aligned to 16 bytes)
+			"\x81\xEC", uint32_t(					// sub esp, (size of local variables)
+				sizeof(trace_t) +
+				sizeof(Ray_t) + 0xC), // the 0xC is padding, needed to align to 16-byte boundary (because of VectorAligned)
+
+			// initialize the ray
+			"\x8D\x9D\x5C\xFF\xFF\xFF",				// lea ebx, [ebp - 0xA4]
+			"\x83\xE3\xF0",							// and ebx, 0xFFFF'FFF0 (-16)
+
+			// ray.m_IsRay = true
+			// ray.m_IsSwept = true
+			"\xC6\x83", uint32_t(					// mov [ebx + m_IsRay], 0x01
+				offsetof(Ray_t, m_IsRay)), "\x01",
+			"\xC6\x83", uint32_t(					// mov [ebx + m_IsSwept], 0x01
+				offsetof(Ray_t, m_IsSwept)), "\x01",
+
+			// ray.m_StartOffset[0] = 0
+			// ray.m_StartOffset[1] = 0
+			// ray.m_StartOffset[2] = 0
+			"\xC7\x83", uint32_t(					// mov [ebx + m_StartOffset], 0
+				offsetof(Ray_t, m_StartOffset)), "\x00\x00\x00\x00",
+			"\xC7\x83", uint32_t(					// mov [ebx + m_StartOffset + 4], 0
+				offsetof(Ray_t, m_StartOffset) + 4), "\x00\x00\x00\x00",
+			"\xC7\x83", uint32_t(					// mov [ebx + m_StartOffset + 8], 0
+				offsetof(Ray_t, m_StartOffset) + 8), "\x00\x00\x00\x00",
+
+			// ray.m_Extents[0] = 0
+			// ray.m_Extents[1] = 0
+			// ray.m_Extents[2] = 0
+			"\xC7\x83", uint32_t(					// mov [ebx + m_Extents], 0
+				offsetof(Ray_t, m_Extents)), "\x00\x00\x00\x00",
+			"\xC7\x83", uint32_t(					// mov [ebx + m_Extents + 4], 0
+				offsetof(Ray_t, m_Extents) + 4), "\x00\x00\x00\x00",
+			"\xC7\x83", uint32_t(					// mov [ebx + m_Extents + 8], 0
+				offsetof(Ray_t, m_Extents) + 8), "\x00\x00\x00\x00",
+
+			// ray.m_Start = eyeposition
+			"\x8B\x45\x10",							// mov eax, [ebp + 0x10] (&eyeposition)
+			"\x8B\x10",								// mov edx, [eax] (eyeposition[0])
+			"\x89\x93", uint32_t(					// mov [ebx + m_Start], edx
+				offsetof(Ray_t, m_Start)),
+			"\x8B\x50\x04",							// mov edx, [eax + 4] (eyeposition[1])
+			"\x89\x93", uint32_t(					// mov [ebx + m_Start + 4], edx
+				offsetof(Ray_t, m_Start) + 4),
+			"\x8B\x50\x08",							// mov edx, [eax + 8] (eyeposition[2])
+			"\x89\x93", uint32_t(					// mov [ebx + m_Start + 8], edx
+				offsetof(Ray_t, m_Start) + 8),
+
+			// ray.m_Delta = position - ray.m_Start
+			"\x8B\x45\x14",							// mov eax, [ebp + 0x14] (&position)
+			"\xF3\x0F\x10\x00",						// movss xmm0, [eax] (position[0])
+			"\xF3\x0F\x5C\x83", uint32_t(			// subss xmm0, [ebx + m_Start]
+				offsetof(Ray_t, m_Start)),
+			"\xF3\x0F\x11\x83", uint32_t(			// movss [ebx + m_Delta], xmm0
+				offsetof(Ray_t, m_Delta)),
+			"\xF3\x0F\x10\x40\x04",					// movss xmm0, [eax + 4] (position[1])
+			"\xF3\x0F\x5C\x83", uint32_t(			// subss xmm0, [ebx + m_Start + 4]
+				offsetof(Ray_t, m_Start) + 4),
+			"\xF3\x0F\x11\x83", uint32_t(			// movss [ebx + m_Delta + 4], xmm0
+				offsetof(Ray_t, m_Delta) + 4),
+			"\xF3\x0F\x10\x40\x08",					// movss xmm0, [eax + 8] (position[2])
+			"\xF3\x0F\x5C\x83", uint32_t(			// subss xmm0, [ebx + m_Start + 8]
+				offsetof(Ray_t, m_Start) + 8),
+			"\xF3\x0F\x11\x83", uint32_t(			// movss [ebx + m_Delta + 8], xmm0
+				offsetof(Ray_t, m_Delta) + 8),
+
+			// engine_trace->TraceRay(&ray, MASK_ALL, trace_filter_thisptr, &trace)
+			"\x8D\x45\xAC",							// lea eax, [ebp - 0x54]
+			"\x50",									// push eax (&trace)
+			"\x68", uint32_t(						// push trace_filter_thisptr
+				trace_filter_thisptr),
+			"\x6A\xFF",								// push 0xFFFFFFFF (MASK_ALL)
+			"\x8D\x85\x5C\xFF\xFF\xFF",				// lea eax, [ebp - 0xA4]
+			"\x83\xE0\xF0",							// and eax, 0xFFFF'FFF0 (-16)
+			"\x50",									// push eax (ray)
+			"\xB9", uint32_t(						// mov ecx, engine_trace
+				interfaces::engine_trace),
+			"\x8B\x01",								// mov eax, [ecx]
+			"\xFF\x90", uint32_t(					// call [eax + (trace_ray offset)]
+				indices::trace_ray * 4),
+
+			// set return value to 1
+			"\xB8\x01\x00\x00\x00",					// mov eax, 1
+
+			// ebx = &trace
+			"\x8D\x5D\xAC",							// lea ebx, [ebp - 0x54]
+
+			// check if fraction == 1.f
+			"\x81\xBB", uint32_t(					// cmp [ebx + fraction], 1.f
+				offsetof(trace_t, fraction)), "\x00\x00\x80\x3F",
+			"\x74", uint8_t(						// je (past the eax = 0)
+				2),
+
+			// set return value to 0
+			"\x31\xC0",								// xor eax, eax
+
+			mango::Shellcode::epilogue<false>(),
+			mango::Shellcode::ret(0x10)
+		);
+
+		// returns the amount of damage and sets position
+		// int getaimposition(CBaseEntity* localplayer, CBaseEntity* entity, vec3* position)
+		mango::Shellcode getaimposition_shellcode(
 			mango::Shellcode::prologue<false>(),
 
 			// arguments:
 			// [ebp + 0x08] == localplayer
 			// [ebp + 0x0C] == entity
 			// [ebp + 0x10] == position
+			// [ebp + 0x14] == eyeposition
 			// local variables:
 			"\x83\xEC", uint8_t(					// sub esp, (size of local variables)
 				0),
@@ -437,10 +583,17 @@ namespace {
 			"\xF3\x0F\x11\x43\x08",					// movss [ebx + 8], xmm0
 			"\x58",									// pop eax
 
-			// return 1
-			"\xB8\x01\x00\x00\x00",					// mov eax, 1
+			// getdamage(localplayer, entity, eyeposition, position)
+			"\xFF\x75\x10",							// push [ebp + 0x10] (position)
+			"\xFF\x75\x14",							// push [ebp + 0x14] (eyeposition)
+			"\xFF\x75\x0C",							// push [ebp + 0x0C] (entity)
+			"\xFF\x75\x08",							// push [ebp + 0x08] (localplayer)
+			"\xE8", uint32_t(-int32_t(				// call getdamage
+				getdamage_shellcode.size() +
+				5 + 71)),															// FIX OFFSET
+
 			mango::Shellcode::epilogue<false>(),
-			mango::Shellcode::ret(0xC)
+			mango::Shellcode::ret(0x10)
 		);
 
 		// void runaimbot(CBaseEntity* localplayer, CUserCmd* cmd)
@@ -455,10 +608,12 @@ namespace {
 			// [ebp - 0x08] == best_entity
 			// [ebp - 0x14] == aim_position
 			// [ebp - 0x20] == position
+			// [ebp - 0x2C] == eye_position
 			"\x83\xEC", uint8_t(					// sub esp, (size of local variables)
 				sizeof(int) + 
 				sizeof(uint32_t) +
 				sizeof(mango::Vec3f) + 
+				sizeof(mango::Vec3f) +
 				sizeof(mango::Vec3f)),
 
 			// ebx = localplayer->m_hActiveWeapon
@@ -502,7 +657,23 @@ namespace {
 			"\xC7\x45\xFC\x00\x00\x00\x00",			// mov [ebp - 0x4], 0
 			"\xC7\x45\xF8\x00\x00\x00\x00",			// mov [ebp - 0x8], 0
 
-			// loop through every entity and call getdamage (above the createmove shellcode)
+			// copy localplayer m_vecOrigin into eye_position local variable
+			"\x8B\x45\x08",							// mov eax, [ebp + 0x8] (localplayer)
+			"\x8B\x90", uint32_t(					// mov edx, [eax + m_vecOrigin]
+				offsets::m_vecOrigin),
+			"\x89\x55\xD4",							// mov [ebp - 0x2C], edx
+			"\x8B\x90", uint32_t(					// mov edx, [eax + m_vecOrigin + 4]
+				offsets::m_vecOrigin + 4),
+			"\x89\x55\xD8",							// mov [ebp - 0x28], edx
+
+			// make sure to also add m_vecViewOffset[2] to eye_position[2]
+			"\xF3\x0F\x10\x80", uint32_t(			// movss xmm0, [eax + m_vecOrigin + 8]
+				offsets::m_vecOrigin + 8),
+			"\xF3\x0F\x58\x80", uint32_t(			// addss xmm0, [eax + m_vecViewOffset + 8]
+				offsets::m_vecViewOffset + 8),
+			"\xF3\x0F\x11\x45\xDC",					// movss [ebp - 0x24], xmm0
+
+			// loop through every entity and call getaimposition (above the createmove shellcode)
 			// ecx will hold the entity index
 			"\xB9\x01\x00\x00\x00",					// mov ecx, 1
 			
@@ -520,25 +691,25 @@ namespace {
 			// check if entity is nullptr
 			"\x85\xC0",								// test eax, eax
 			"\x0F\x84", uint32_t(					// jz (end of loop)
-				108),																// FIX OFFSET		
+				112),																// FIX OFFSET		
 
 			// check if they're dead
 			"\x83\xB8", uint32_t(					// cmp [eax + m_iHealth], 0
 				offsets::m_iHealth), "\x00",
 			"\x0F\x84", uint32_t(					// jz (end of loop)
-				95),																// FIX OFFSET
+				99),																// FIX OFFSET
 
 			// check if they're dormant
 			"\x80\xB8", uint32_t(					// cmp byte ptr [eax + m_bDormant], 0
 				offsets::m_bDormant), "\x00",
 			"\x0F\x85", uint32_t(					// jnz (end of loop)
-				82),																// FIX OFFSET
+				86),																// FIX OFFSET
 
 			// check if immune
 			"\x80\xB8", uint32_t(					// cmp byte ptr [eax + m_bGunGameImmunity], 0
 				offsets::m_bGunGameImmunity), "\x00",
 			"\x0F\x85", uint32_t(					// jnz (end of loop)
-				69),																// FIX OFFSET
+				73),																// FIX OFFSET
 
 			// check if same team
 			"\x8B\x55\x08",							// mov edx, [ebp + 0x8] (localplayer)
@@ -547,19 +718,21 @@ namespace {
 			"\x3B\x90", uint32_t(					// cmp edx, [eax + m_iTeamNum]
 				offsets::m_iTeamNum),
 			"\x0F\x84", uint32_t(					// jz (end of loop)
-				48),																// FIX OFFSET
+				52),																// FIX OFFSET
 
 			// save the entity onto the stack for use later
 			"\x50",									// push eax
 
-			// get_damage(entity, &position)
+			// getaimposition(localplayer, entity, &position, &eyeposition)
+			"\x8D\x55\xD4",							// lea edx, [ebp - 0x2C]
+			"\x52",									// push edx				(&eyeposition)
 			"\x8D\x55\xE0",							// lea edx, [ebp - 0x20]
 			"\x52",									// push edx				(&position)
 			"\x50",									// push eax				(entity)
 			"\xFF\x75\x08",							// push [ebp + 0x08]	(localplayer)
-			"\xE8", uint32_t(-int32_t(				// call get_damage
-				getdamage_shellcode.size() +
-				5 + 187)),															// FIX OFFSET
+			"\xE8", uint32_t(-int32_t(				// call getaimposition
+				getaimposition_shellcode.size() +
+				5 + 233)),															// FIX OFFSET
 
 			// pop the entity into edx
 			"\x5A",									// pop edx
@@ -588,7 +761,7 @@ namespace {
 			"\x41",									// inc ecx
 			"\x83\xF9\x40",							// cmp ecx, 64
 			"\x0F\x8C", uint32_t(					// jl (start of loop)
-				-int32_t(6 + 133)),													// FIX OFFSET
+				-int32_t(6 + 137)),													// FIX OFFSET
 
 			// if best_entity is nullptr, return
 			"\x83\x7D\xF8\x00",						// cmp [ebp - 0x08], 0
@@ -600,24 +773,14 @@ namespace {
 			mango::Shellcode::epilogue<false>(),
 			mango::Shellcode::ret(0x8),
 
-			// copy localplayer m_vecOrigin into position local variable
-			"\x8B\x45\x08",							// mov eax, [ebp + 0x8] (localplayer)
-			"\x8B\x90", uint32_t(					// mov edx, [eax + m_vecOrigin]
-				offsets::m_vecOrigin),
+			// position = eye_position
+			"\x8B\x55\xD4",							// mov edx, [ebp - 0x2C]
 			"\x89\x55\xE0",							// mov [ebp - 0x20], edx
-			"\x8B\x90", uint32_t(					// mov edx, [eax + m_vecOrigin + 4]
-				offsets::m_vecOrigin + 4),
+			"\x8B\x55\xD8",							// mov edx, [ebp - 0x28]
 			"\x89\x55\xE4",							// mov [ebp - 0x1C], edx
-			"\x8B\x90", uint32_t(					// mov edx, [eax + m_vecOrigin + 8]
-				offsets::m_vecOrigin + 8),
+			"\x8B\x55\xDC",							// mov edx, [ebp - 0x24]
 			"\x89\x55\xE8",							// mov [ebp - 0x18], edx
-
-			// add m_vecViewOffset[2] to position[2] (eax is still localplayer at this point)
-			"\xF3\x0F\x10\x45\xE8",					// movss xmm0, [ebp - 0x18]
-			"\xF3\x0F\x58\x80", uint32_t(			// addss xmm0, [eax + m_vecViewOffset + 8]
-				offsets::m_vecViewOffset + 8),
-			"\xF3\x0F\x11\x45\xE8",					// movss [ebp - 0x18], xmm0
-
+			
 			// position[0] = aim_position[0] - position[0]
 			"\xF3\x0F\x10\x45\xEC",					// movss xmm0, [ebp - 0x14]
 			"\xF3\x0F\x5C\x45\xE0",					// subss xmm0, [ebp - 0x20]
@@ -640,11 +803,12 @@ namespace {
 			"\x8D\x45\xE0",							// lea eax, [ebp - 0x20] (position)
 			"\x50",									// push eax
 			"\xE8", uint32_t(-int32_t(				// call vectorangle
-				vectorangle_shellcode.size() +
-				fixmovement_shellcode.size() +
 				getdamage_shellcode.size() +
-				5 + 355)),															// FIX OFFSET
-					
+				getaimposition_shellcode.size() +
+				fixmovement_shellcode.size() +
+				vectorangle_shellcode.size() +
+				5 + 371)),															// FIX OFFSET
+
 			// xmm1 = 2.f
 			"\x68\x00\x00\x00\x40",					// push 2.f
 			"\xF3\x0F\x10\x14\x24",					// movss xmm2, [esp]
@@ -738,7 +902,8 @@ namespace {
 			// call the original createmove
 			"\xFF\x75\x0C",							// push [ebp + 0xC]
 			"\xFF\x75\x08",							// push [ebp + 0x8]
-			"\xB8", orig_create_move,				// mov eax, orig_create_move
+			"\xB8", uint32_t(						// mov eax, orig_create_move
+				orig_create_move),
 			"\xFF\xD0",								// call eax
 
 			// arguments:
@@ -798,6 +963,7 @@ namespace {
 			"\xE8", uint32_t(-int32_t(				// call fixmovement
 				runantiaim_shellcode.size() +
 				runaimbot_shellcode.size() +
+				getaimposition_shellcode.size() +
 				getdamage_shellcode.size() +
 				fixmovement_shellcode.size() +
 				5 + 89)),															// FIX OFFSET
@@ -813,7 +979,8 @@ namespace {
 			atan2_shellcode.size() +
 			vectorangle_shellcode.size() + 
 			fixmovement_shellcode.size() +
-			getdamage_shellcode.size() + 
+			getdamage_shellcode.size() +
+			getaimposition_shellcode.size() + 
 			runaimbot_shellcode.size() +
 			runantiaim_shellcode.size() +
 			createmove_shellcode.size(), PAGE_EXECUTE_READWRITE)));
@@ -831,17 +998,25 @@ namespace {
 			vectorangle_shellcode.size());
 
 		// getdamage
-		getdamage_shellcode.write(globals::process, create_move_shellcode_addr + 
+		getdamage_shellcode.write(globals::process, create_move_shellcode_addr +
 			atan2_shellcode.size() +
 			vectorangle_shellcode.size() +
 			fixmovement_shellcode.size());
+
+		// getaimposition
+		getaimposition_shellcode.write(globals::process, create_move_shellcode_addr + 
+			atan2_shellcode.size() +
+			vectorangle_shellcode.size() +
+			fixmovement_shellcode.size() +
+			getdamage_shellcode.size());
 
 		// runaimbot
 		runaimbot_shellcode.write(globals::process, create_move_shellcode_addr +
 			atan2_shellcode.size() +
 			vectorangle_shellcode.size() +
 			fixmovement_shellcode.size() +
-			getdamage_shellcode.size());
+			getdamage_shellcode.size() +
+			getaimposition_shellcode.size());
 
 		// runantiaim
 		runantiaim_shellcode.write(globals::process, create_move_shellcode_addr +
@@ -849,6 +1024,7 @@ namespace {
 			vectorangle_shellcode.size() +
 			fixmovement_shellcode.size() +
 			getdamage_shellcode.size() +
+			getaimposition_shellcode.size() +
 			runaimbot_shellcode.size());
 
 		// createmove
@@ -857,6 +1033,7 @@ namespace {
 			vectorangle_shellcode.size() + 
 			fixmovement_shellcode.size() +
 			getdamage_shellcode.size() +
+			getaimposition_shellcode.size() +
 			runaimbot_shellcode.size() +
 			runantiaim_shellcode.size());
 
@@ -866,6 +1043,7 @@ namespace {
 			vectorangle_shellcode.size() +
 			fixmovement_shellcode.size() +
 			getdamage_shellcode.size() +
+			getaimposition_shellcode.size() +
 			runaimbot_shellcode.size() +
 			runantiaim_shellcode.size());
 	}

@@ -161,6 +161,7 @@
     <ClCompile Include="sdk\classes\client.cpp" />
     <ClCompile Include="sdk\classes\engine_client.cpp" />
     <ClCompile Include="sdk\classes\engine_cvar.cpp" />
+    <ClCompile Include="sdk\classes\engine_trace.cpp" />
     <ClCompile Include="sdk\classes\material.cpp" />
     <ClCompile Include="sdk\classes\material_system.cpp" />
     <ClCompile Include="sdk\misc\constants.cpp" />
@@ -182,6 +183,7 @@
     <ClInclude Include="sdk\classes\engine_client.h" />
     <ClInclude Include="sdk\classes\defines.h" />
     <ClInclude Include="sdk\classes\engine_cvar.h" />
+    <ClInclude Include="sdk\classes\engine_trace.h" />
     <ClInclude Include="sdk\classes\glow_object_manager.h" />
     <ClInclude Include="sdk\classes\material.h" />
     <ClInclude Include="sdk\classes\material_system.h" />

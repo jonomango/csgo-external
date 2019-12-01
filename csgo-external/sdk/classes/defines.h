@@ -172,4 +172,76 @@ namespace sdk {
 		float interval_per_tick;
 		float interpolation_amount;
 	};
+
+	// https://github.com/ValveSoftware/source-sdk-2013/blob/master/sp/src/public/mathlib/vector.h#L374
+	class alignas(16) VectorAligned : public mango::Vec3f {
+	public:
+		VectorAligned& operator=(const mango::Vec3f& other) {
+			(*this)[0] = other[0];
+			(*this)[1] = other[1];
+			(*this)[2] = other[2];
+			return *this;
+		}
+
+		float w; // unused afaik
+	};
+
+	// https://github.com/ValveSoftware/source-sdk-2013/blob/master/sp/src/public/cmodel.h#L61
+	class Ray_t {
+	public:
+		VectorAligned m_Start;			// starting point, centered within the extents
+		VectorAligned m_Delta;			// direction + length of the ray
+		VectorAligned m_StartOffset;	// Add this to m_Start to get the actual ray start
+		VectorAligned m_Extents;		// Describes an axis aligned box extruded along a ray
+	private:
+		uint8_t m_padding_0[4];
+	public:
+		bool m_IsRay;					// are the extents zero?
+		bool m_IsSwept;					// is delta != 0?
+
+		void Init(const mango::Vec3f& vecStart, const mango::Vec3f& vecEnd) {
+			m_IsRay = true;
+
+			m_Start = vecStart;
+			m_Delta = vecEnd - vecStart;
+			m_IsSwept = (m_Delta.length() != 0.0); // usually true
+
+			m_Extents.fill(0.f);
+			m_StartOffset.fill(0.f);
+		}
+	};
+
+	// https://github.com/ValveSoftware/source-sdk-2013/blob/master/mp/src/public/cmodel.h#L50
+	struct csurface_t {
+		uint32_t name;
+		int16_t surfaceProps;
+		uint16_t flags;
+	};
+
+	struct cplane_t {
+		mango::Vec3f normal;
+		float dist;
+		uint8_t type;
+		uint8_t signbits;
+	private:
+		uint8_t m_padding_0[2];
+	};
+
+	// https://github.com/ValveSoftware/source-sdk-2013/blob/master/mp/src/public/gametrace.h#L30
+	struct trace_t {
+		mango::Vec3f start;
+		mango::Vec3f end;
+		cplane_t plane;
+		float fraction;
+		int contents;
+		uint16_t dispFlags;
+		bool allsolid;
+		bool startSolid;
+		float fractionLeftSolid;
+		csurface_t surface;
+		int hitGroup;
+		int16_t physicsBone;
+		uint32_t entity;
+		int hitbox;
+	};
 } // namespace sdk
