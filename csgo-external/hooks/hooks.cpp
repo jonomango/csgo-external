@@ -913,6 +913,34 @@ namespace {
 			mango::Shellcode::ret(0x8)
 		);
 
+		// void runbhop(CBaseEntity* localplayer, CUserCmd* cmd)
+		mango::Shellcode runbhop_shellcode(
+			mango::Shellcode::prologue<false>(),
+
+			// arguments:
+			// [ebp + 0x08] == localplayer
+			// [ebp + 0x0C] == cmd
+
+			// check if FL_ONGROUND flag is set
+			"\x8B\x5D\x08",							// mov ebx, [ebp + 0x08]
+			"\x8B\x93", uint32_t(					// mov edx, [ebx + m_fFlags]
+				offsets::m_fFlags),
+			"\x81\xE2", uint32_t(					// and edx, FL_ONGROUND
+				1 << 0),
+			"\x83\xFA\x00",							// cmp edx, 0
+			"\x75", uint8_t(						// jne (end of function)
+				13),
+
+			// cmd->buttons &= ~IN_JUMP
+			"\x8B\x5D\x0C",							// mov ebx, [ebp + 0x0C]
+			"\x81\xA3", uint32_t(					// and [ebx + buttons], ~IN_JUMP
+				offsetof(CUserCmd, buttons)), 
+				uint32_t(~(1 << 1)),
+
+			mango::Shellcode::epilogue<false>(),
+			mango::Shellcode::ret(0x8)
+		);
+
 		// bool createmove(float frametime, CUserCmd* cmd)
 		mango::Shellcode createmove_shellcode(
 			mango::Shellcode::prologue<false>(),
@@ -965,6 +993,7 @@ namespace {
 			"\xFF\x75\x0C",							// push [ebp + 0xC] (cmd)
 			"\xFF\x75\xFC",							// push [ebp - 0x4] (localplayer)
 			"\xE8", uint32_t(-int32_t(				// call runantiaim
+				runbhop_shellcode.size() +
 				runantiaim_shellcode.size() +
 				5 + 70)),															// FIX OFFSET
 
@@ -972,19 +1001,28 @@ namespace {
 			"\xFF\x75\x0C",							// push [ebp + 0xC] (cmd)
 			"\xFF\x75\xFC",							// push [ebp - 0x4] (localplayer)
 			"\xE8", uint32_t(-int32_t(				// call runaimbot
+				runbhop_shellcode.size() +
 				runantiaim_shellcode.size() +
 				runaimbot_shellcode.size() +
 				5 + 81)),															// FIX OFFSET
 
+			// runbhop(localplayer, cmd)
+			"\xFF\x75\x0C",							// push [ebp + 0xC] (cmd)
+			"\xFF\x75\xFC",							// push [ebp - 0x4] (localplayer)
+			"\xE8", uint32_t(-int32_t(				// call runbhop
+				runbhop_shellcode.size() +
+				5 + 92)),															// FIX OFFSET
+
 			// fixmovement(cmd)
 			"\xFF\x75\x0C",							// push [ebp + 0xC] (cmd)
 			"\xE8", uint32_t(-int32_t(				// call fixmovement
+				runbhop_shellcode.size() +
 				runantiaim_shellcode.size() +
 				runaimbot_shellcode.size() +
 				getaimposition_shellcode.size() +
 				getdamage_shellcode.size() +
 				fixmovement_shellcode.size() +
-				5 + 89)),															// FIX OFFSET
+				5 + 100)),															// FIX OFFSET
 			
 			// return false
 			"\x31\xC0",								// xor eax, eax
@@ -1001,6 +1039,7 @@ namespace {
 			getaimposition_shellcode.size() + 
 			runaimbot_shellcode.size() +
 			runantiaim_shellcode.size() +
+			runbhop_shellcode.size() +
 			createmove_shellcode.size(), PAGE_EXECUTE_READWRITE)));
 
 		// atan2
@@ -1045,6 +1084,16 @@ namespace {
 			getaimposition_shellcode.size() +
 			runaimbot_shellcode.size());
 
+		// runbhop
+		runbhop_shellcode.write(globals::process, create_move_shellcode_addr +
+			atan2_shellcode.size() +
+			vectorangle_shellcode.size() +
+			fixmovement_shellcode.size() +
+			getdamage_shellcode.size() +
+			getaimposition_shellcode.size() +
+			runaimbot_shellcode.size() +
+			runantiaim_shellcode.size());
+
 		// createmove
 		createmove_shellcode.write(globals::process, create_move_shellcode_addr + 
 			atan2_shellcode.size() +
@@ -1053,7 +1102,8 @@ namespace {
 			getdamage_shellcode.size() +
 			getaimposition_shellcode.size() +
 			runaimbot_shellcode.size() +
-			runantiaim_shellcode.size());
+			runantiaim_shellcode.size() +
+			runbhop_shellcode.size());
 
 		// hook the function
 		client_mode_hook.hook(indices::create_move, create_move_shellcode_addr +
@@ -1063,16 +1113,8 @@ namespace {
 			getdamage_shellcode.size() +
 			getaimposition_shellcode.size() +
 			runaimbot_shellcode.size() +
-			runantiaim_shellcode.size());
-
-		mango::logger.info(std::hex, atan2_shellcode.size() +
-			vectorangle_shellcode.size() +
-			fixmovement_shellcode.size() +
-			getdamage_shellcode.size() +
-			getaimposition_shellcode.size() +
-			runaimbot_shellcode.size() +
 			runantiaim_shellcode.size() +
-			createmove_shellcode.size());
+			runbhop_shellcode.size());
 	}
 } // namespace
 
