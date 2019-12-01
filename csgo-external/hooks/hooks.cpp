@@ -31,10 +31,30 @@ namespace {
 		globals::process.write(float_str_addr, float_str.data(), float_str.size() + 1);
 
 		struct AimbotTraceFilter {
-			uint64_t m_should_hit_entity;
-			uint32_t m_get_trace_type;
+			// return (entity != this->m_ignore_entity)
+			//
+			// mov eax, [esp + 0x04]
+			// cmp eax, [ecx + 0x04]
+			// je return_0
+			// mov al, 0x01
+			// ret 0x08
+			// return_0:
+			// xor al, al
+			// ret 0x08
+			uint8_t m_should_hit_entity[19] = { 0x8B, 0x44, 0x24, 0x04, 0x3B, 0x41, 0x04, 0x74, 0x05, 0xB0, 0x01, 0xC2, 0x08, 0x00, 0x30, 0xC0, 0xC2, 0x08, 0x00 };
+
+			// return 0 (TRACE_EVERYTHING)
+			//
+			// xor eax, eax
+			// ret
+			uint8_t m_get_trace_type[3] = { 0x31, 0xC0, 0xC3 };
+
+			// vtable stuffz
 			uint32_t m_vtable[2];
 			uint32_t m_vtable_ptr;
+
+			// our traces will ignore this entity (usually localplayer)
+			uint32_t m_ignore_entity;
 		};
 
 		// this cant be on the stack cuz of noexecute
@@ -44,14 +64,6 @@ namespace {
 		// manually construct the vtable and functions for our tracefilter (i dont account for the RTTICompleteObjectLocator before the vtable but that's unnecessary)
 		{
 			AimbotTraceFilter trace_filter;
-
-			//   31C0	xor eax, eax
-			// C20800	ret 0x8
-			trace_filter.m_should_hit_entity = 0x0008C2'C031;
-
-			//	 31C0	xor eax, eax
-			//	   C3	ret
-			trace_filter.m_get_trace_type = 0xC3'C031; // TRACE_EVERYTHING = 0
 
 			// set the vtable entries to point to our functions
 			trace_filter.m_vtable[0] = trace_filter_addr + offsetof(AimbotTraceFilter, m_should_hit_entity);
@@ -446,6 +458,11 @@ namespace {
 				sizeof(trace_t) +
 				sizeof(Ray_t) + 0xC), // the 0xC is padding, needed to align to 16-byte boundary (because of VectorAligned)
 
+			// make AimbotTraceFilter::m_ignore_entity to point localplayer
+			"\x8B\x45\x08",							// mov eax, [ebp + 0x08]
+			"\xA3", uint32_t(						// mov trace_filter_addr.m_ignore_entity, eax
+				trace_filter_addr + offsetof(AimbotTraceFilter, m_ignore_entity)),
+
 			// initialize the ray
 			"\x8D\x9D\x5C\xFF\xFF\xFF",				// lea ebx, [ebp - 0xA4]
 			"\x83\xE3\xF0",							// and ebx, 0xFFFF'FFF0 (-16)
@@ -528,9 +545,10 @@ namespace {
 			// ebx = &trace
 			"\x8D\x5D\xAC",							// lea ebx, [ebp - 0x54]
 
-			// check if fraction == 1.f
-			"\x81\xBB", uint32_t(					// cmp [ebx + fraction], 1.f
-				offsetof(trace_t, fraction)), "\x00\x00\x80\x3F",
+			// check if trace.entity == entity
+			"\x8B\x55\x0C",							// mov edx, [ebp + 0xC] (entity)
+			"\x3B\x93", uint32_t(					// cmp edx, [ebx + entity]
+				offsetof(trace_t, entity)),
 			"\x74", uint8_t(						// je (past the eax = 0)
 				2),
 
@@ -542,7 +560,7 @@ namespace {
 		);
 
 		// returns the amount of damage and sets position
-		// int getaimposition(CBaseEntity* localplayer, CBaseEntity* entity, vec3* position)
+		// int getaimposition(CBaseEntity* localplayer, CBaseEntity* entity, vec3* position, eyeposition)
 		mango::Shellcode getaimposition_shellcode(
 			mango::Shellcode::prologue<false>(),
 
@@ -1046,6 +1064,15 @@ namespace {
 			getaimposition_shellcode.size() +
 			runaimbot_shellcode.size() +
 			runantiaim_shellcode.size());
+
+		mango::logger.info(std::hex, atan2_shellcode.size() +
+			vectorangle_shellcode.size() +
+			fixmovement_shellcode.size() +
+			getdamage_shellcode.size() +
+			getaimposition_shellcode.size() +
+			runaimbot_shellcode.size() +
+			runantiaim_shellcode.size() +
+			createmove_shellcode.size());
 	}
 } // namespace
 

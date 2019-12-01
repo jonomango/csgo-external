@@ -172,11 +172,6 @@ void run_cheat() {
 int main() {
 	setup_logger();
 
-	constexpr uint32_t cheese = 0x110 - 0x50;
-	constexpr uint32_t aligned = cheese & uint32_t(-16);
-	constexpr uint32_t frog2 = 0x110 - 0x5C;
-	constexpr uint32_t frog1 = 0x110 - 0x50;
-
 	try {
 		setup_cheat();
 		mango::ScopeGuard _guard(&release_cheat);
