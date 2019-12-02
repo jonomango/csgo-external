@@ -95,6 +95,9 @@ namespace sdk {
 		const inline uint32_t get_all_classes = 8;
 		const inline uint32_t hud_process_input = 10;
 
+		// VModelInfoClient
+		const inline uint32_t get_studio_hdr = 32;
+
 		// EngineTraceClient
 		const inline uint32_t trace_ray = 5;
 

@@ -26,9 +26,9 @@ namespace {
 		const auto vector_str_addr = uint32_t(uintptr_t(globals::process.alloc_virt_mem(vector_str.size() + 1)));
 		globals::process.write(vector_str_addr, vector_str.data(), vector_str.size() + 1);
 
-		const std::string float_str("float: %f\n");
-		const auto float_str_addr = uint32_t(uintptr_t(globals::process.alloc_virt_mem(float_str.size() + 1)));
-		globals::process.write(float_str_addr, float_str.data(), float_str.size() + 1);
+		const std::string hex_str("hex: %X\n");
+		const auto hex_str_addr = uint32_t(uintptr_t(globals::process.alloc_virt_mem(hex_str.size() + 1)));
+		globals::process.write(hex_str_addr, hex_str.data(), hex_str.size() + 1);
 
 		struct AimbotTraceFilter {
 			// return (entity != this->m_ignore_entity)
@@ -446,6 +446,66 @@ namespace {
 		mango::Shellcode gethitboxpos_shellcode(
 			mango::Shellcode::prologue<false>(),
 
+			// arguments:
+			// [ebp + 0x08]			== entity
+			// [ebp + 0x0C]			== hitbox id
+			// [ebp + 0x10]			== position
+			// local variables:
+			// [ebp - 0x04]			== hitbox
+			"\x83\xEC", uint8_t(					// sub esp, (size of local variables)
+				sizeof(uint32_t)),
+
+			// get the model_t*
+			"\x8B\x4D\x08",							// mov ecx, [ebp + 0x08] (entity)
+			"\x83\xC1\x04",							// add ecx, 0x04
+			"\x8B\x01",								// mov eax, [ecx]
+			"\xFF\x90", uint32_t(					// call [eax + (get_model offset)]
+				indices::get_model * 4),
+
+			// get the studiohdr_t*
+			"\x50",									// push eax (model_t*)
+			"\xB9", uint32_t(						// mov ecx, model_info
+				interfaces::model_info),
+			"\x8B\x01",								// mov eax, [ecx]
+			"\xFF\x90", uint32_t(					// call [eax + (get_studio_hdr offset)]
+				indices::get_studio_hdr * 4),
+
+			// get the mstudiohitboxset_t*
+			"\x03\x80", uint32_t(					// add eax, [eax + hitboxsetindex]
+				offsetof(studiohdr_t, hitboxsetindex)),
+
+			// finally, get the mstudiobbox_t*
+			"\x03\x80", uint32_t(					// add eax, [eax + hitboxindex]
+				offsetof(mstudiohitboxset_t, hitboxindex)),
+			"\x8B\x55\x0C",							// mov edx, [ebp + 0x0C] (hitbox id)
+			"\x69\xD2", uint32_t(					// imul edx, sizeof(mstudiobbox_t)
+				sizeof(mstudiobbox_t)),
+			"\x01\xD0",								// add eax, edx
+			"\x89\x45\xFC",							// mov [ebp - 0x04], eax
+
+			// eax = offset into bone matrix array
+			"\x8B\x80", uint32_t(					// mov eax, [eax + bone]
+				offsetof(mstudiobbox_t, bone)),
+			"\x69\xC0", uint32_t(					// imul eax, sizeof(Matrix3x4f)
+				sizeof(mango::Matrix3x4f)),
+
+			// ebx = bone matrix
+			"\x8B\x5D\x08",							// mov ebx, [ebp + 0x08] (entity)
+			"\x8B\x9B", uint32_t(					// mov ebx, [ebx + m_pBones]
+				offsets::m_BoneAccessor + offsetof(BoneAccessor, m_pBones)),
+			"\x01\xC3",								// add ebx, eax
+
+			// position[0] = matrix[0][3]
+			// position[1] = matrix[1][3]
+			// position[2] = matrix[2][3]
+			"\x8B\x45\x10",							// mov eax, [ebp + 0x10] (position)
+			"\x8B\x53\x0C",							// mov edx, [ebx + 0x0C] (matrix[0][3])
+			"\x89\x10",								// mov [eax], edx (position[0])
+			"\x8B\x53\x1C",							// mov edx, [ebx + 0x1C] (matrix[1][3])
+			"\x89\x50\x04",							// mov [eax + 0x04], edx (position[1])
+			"\x8B\x53\x2C",							// mov edx, [ebx + 0x2C] (matrix[2][3])
+			"\x89\x50\x08",							// mov [eax + 0x08], edx (position[2])
+
 			mango::Shellcode::epilogue<false>(),
 			mango::Shellcode::ret(0xC)
 		);
@@ -583,7 +643,7 @@ namespace {
 
 			// mov entity into eax
 			"\xFF\x75\x10",							// push [ebp + 0x10] (position)
-			"\x6A\x08",								// push 8 (HEAD_HITBOX)
+			"\x6A\x00",								// push 0 (HEAD_HITBOX)
 			"\xFF\x75\x0C",							// push [ebp + 0x0C] (entity)
 			"\xE8", uint32_t(-int32_t(				// call gethitboxpos
 				gethitboxpos_shellcode.size() +

@@ -89,19 +89,11 @@ void release_cheat() {
 	sdk::globals::process.release();
 }
 
-mango::Vec3f vector_transform(const mango::Vec3f& vec, const mango::Matrix3x4f& mat) {
-	return mango::Vec3f(
-		(vec[0] * mat[0][0]) + (vec[1] * mat[0][1]) + (vec[2] * mat[0][2]) + (1.f * mat[0][3]),
-		(vec[0] * mat[1][0]) + (vec[1] * mat[1][1]) + (vec[2] * mat[1][2]) + (1.f * mat[1][3]),
-		(vec[0] * mat[2][0]) + (vec[1] * mat[2][1]) + (vec[2] * mat[2][2]) + (1.f * mat[2][3])
-	);
-}
-
 // where the juice is
 void run_cheat() {
 	using namespace sdk;
 
-	while (!GetAsyncKeyState(VK_INSERT)) {
+	while (!GetAsyncKeyState(VK_INSERT)) try {
 		if (!interfaces::engine_client.is_in_game()) {
 			std::this_thread::sleep_for(std::chrono::milliseconds(100));
 			continue;
@@ -142,15 +134,6 @@ void run_cheat() {
 					// radar
 					if (config::misc::radar_enabled)
 						entity.set_spotted(true);
-
-					const auto hitbox = entity.get_hitbox(0);
-					const auto matrix = entity.get_bone_matrix(hitbox.bone);
-					
-					const auto min = vector_transform(hitbox.bbmin, matrix);
-					const auto max = vector_transform(hitbox.bbmax, matrix);
-
-					const auto position = (min + max) * mango::Vec3f(0.5f);
-					mango::logger.info(position);
 				} else /* teammates */ {
 					// glow
 					if (config::glow::teammate_enabled)
@@ -162,6 +145,9 @@ void run_cheat() {
 		}
 
 		mango::logger.info(enc_str("Exiting main loop..."));
+	} catch (mango::MangoError& e) {
+		mango::logger.error(e.what());
+		mango::logger.info(enc_str("Ignoring error..."));
 	}
 }
 

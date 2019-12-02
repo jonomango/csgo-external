@@ -19,7 +19,7 @@ namespace sdk {
 	struct mstudiohitboxset_t {
 		// returns a mstudiobbox_t*
 		uint32_t get_hitbox(const uint32_t address, const int i) const {
-			return address + hitboxindex + (i * sizeof(mstudiobbox_t*));
+			return address + hitboxindex + (i * sizeof(mstudiobbox_t));
 		}
 
 		int				sznameindex;
@@ -30,7 +30,7 @@ namespace sdk {
 	struct studiohdr_t {
 		// returns a mstudiohitboxset_t*
 		uint32_t get_hitbox_set(const uint32_t address, const int i) const {
-			return address + hitboxsetindex + (i * sizeof(mstudiohitboxset_t*));
+			return address + hitboxsetindex + (i * sizeof(mstudiohitboxset_t));
 		}
 
 		int             id;
