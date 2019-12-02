@@ -442,6 +442,14 @@ namespace {
 			mango::Shellcode::ret(0x4)
 		);
 
+		// void gethitboxpos(CBaseEntity* entity, int hitbox, vec3* position)
+		mango::Shellcode gethitboxpos_shellcode(
+			mango::Shellcode::prologue<false>(),
+
+			mango::Shellcode::epilogue<false>(),
+			mango::Shellcode::ret(0xC)
+		);
+
 		// int getdamage(CBaseEntity* localplayer, CBaseEntity* entity, vec3* eyeposition, vec3* position)
 		mango::Shellcode getdamage_shellcode(
 			mango::Shellcode::prologue<false>(),
@@ -574,32 +582,13 @@ namespace {
 				0),
 
 			// mov entity into eax
-			"\x8B\x45\x0C",							// mov eax, [ebp + 0x0C]
-
-			// mov position ptr into ebx
-			"\x8B\x5D\x10"							// mov ebx, [ebp + 0x10]
-			
-			// copy m_vecOrigin[0] into position[0]
-			"\x8B\x90", uint32_t(					// mov edx, [eax + m_vecOrigin]
-				offsets::m_vecOrigin),
-			"\x89\x13",								// mov [ebx], edx
-			
-			// copy m_vecOrigin[1] into position[1]
-			"\x8B\x90", uint32_t(					// mov edx, [eax + m_vecOrigin + 4]
-				offsets::m_vecOrigin + 4),
-			"\x89\x53\x04",							// mov [ebx + 4], edx
-			
-			// copy m_vecOrigin[2] into position[2]
-			"\x8B\x90", uint32_t(					// mov edx, [eax + m_vecOrigin + 8]
-				offsets::m_vecOrigin + 8),
-			"\x89\x53\x08",							// mov [ebx + 8], edx
-
-			// position[0] += 40.f
-			"\x68", uint32_t(0x42200000),			// push 40.f
-			"\xF3\x0F\x10\x43\x08",					// movss xmm0, [ebx + 8]
-			"\xF3\x0F\x58\x04\x24",					// addss xmm0, [esp]
-			"\xF3\x0F\x11\x43\x08",					// movss [ebx + 8], xmm0
-			"\x58",									// pop eax
+			"\xFF\x75\x10",							// push [ebp + 0x10] (position)
+			"\x6A\x08",								// push 8 (HEAD_HITBOX)
+			"\xFF\x75\x0C",							// push [ebp + 0x0C] (entity)
+			"\xE8", uint32_t(-int32_t(				// call gethitboxpos
+				gethitboxpos_shellcode.size() +
+				getdamage_shellcode.size() +
+				5 + 14)),															// FIX OFFSET
 
 			// getdamage(localplayer, entity, eyeposition, position)
 			"\xFF\x75\x10",							// push [ebp + 0x10] (position)
@@ -608,7 +597,7 @@ namespace {
 			"\xFF\x75\x08",							// push [ebp + 0x08] (localplayer)
 			"\xE8", uint32_t(-int32_t(				// call getdamage
 				getdamage_shellcode.size() +
-				5 + 71)),															// FIX OFFSET
+				5 + 31)),															// FIX OFFSET
 
 			mango::Shellcode::epilogue<false>(),
 			mango::Shellcode::ret(0x10)
@@ -821,8 +810,9 @@ namespace {
 			"\x8D\x45\xE0",							// lea eax, [ebp - 0x20] (position)
 			"\x50",									// push eax
 			"\xE8", uint32_t(-int32_t(				// call vectorangle
-				getdamage_shellcode.size() +
 				getaimposition_shellcode.size() +
+				getdamage_shellcode.size() +
+				gethitboxpos_shellcode.size() +
 				fixmovement_shellcode.size() +
 				vectorangle_shellcode.size() +
 				5 + 371)),															// FIX OFFSET
@@ -1021,6 +1011,7 @@ namespace {
 				runaimbot_shellcode.size() +
 				getaimposition_shellcode.size() +
 				getdamage_shellcode.size() +
+				gethitboxpos_shellcode.size() +
 				fixmovement_shellcode.size() +
 				5 + 100)),															// FIX OFFSET
 			
@@ -1035,6 +1026,7 @@ namespace {
 			atan2_shellcode.size() +
 			vectorangle_shellcode.size() + 
 			fixmovement_shellcode.size() +
+			gethitboxpos_shellcode.size() +
 			getdamage_shellcode.size() +
 			getaimposition_shellcode.size() + 
 			runaimbot_shellcode.size() +
@@ -1054,17 +1046,25 @@ namespace {
 			atan2_shellcode.size() +
 			vectorangle_shellcode.size());
 
+		// gethitboxpos
+		gethitboxpos_shellcode.write(globals::process, create_move_shellcode_addr +
+			atan2_shellcode.size() +
+			vectorangle_shellcode.size() +
+			fixmovement_shellcode.size());
+
 		// getdamage
 		getdamage_shellcode.write(globals::process, create_move_shellcode_addr +
 			atan2_shellcode.size() +
 			vectorangle_shellcode.size() +
-			fixmovement_shellcode.size());
+			fixmovement_shellcode.size() +
+			gethitboxpos_shellcode.size());
 
 		// getaimposition
 		getaimposition_shellcode.write(globals::process, create_move_shellcode_addr + 
 			atan2_shellcode.size() +
 			vectorangle_shellcode.size() +
 			fixmovement_shellcode.size() +
+			gethitboxpos_shellcode.size() +
 			getdamage_shellcode.size());
 
 		// runaimbot
@@ -1072,6 +1072,7 @@ namespace {
 			atan2_shellcode.size() +
 			vectorangle_shellcode.size() +
 			fixmovement_shellcode.size() +
+			gethitboxpos_shellcode.size() +
 			getdamage_shellcode.size() +
 			getaimposition_shellcode.size());
 
@@ -1080,6 +1081,7 @@ namespace {
 			atan2_shellcode.size() +
 			vectorangle_shellcode.size() +
 			fixmovement_shellcode.size() +
+			gethitboxpos_shellcode.size() +
 			getdamage_shellcode.size() +
 			getaimposition_shellcode.size() +
 			runaimbot_shellcode.size());
@@ -1089,6 +1091,7 @@ namespace {
 			atan2_shellcode.size() +
 			vectorangle_shellcode.size() +
 			fixmovement_shellcode.size() +
+			gethitboxpos_shellcode.size() +
 			getdamage_shellcode.size() +
 			getaimposition_shellcode.size() +
 			runaimbot_shellcode.size() +
@@ -1099,6 +1102,7 @@ namespace {
 			atan2_shellcode.size() +
 			vectorangle_shellcode.size() + 
 			fixmovement_shellcode.size() +
+			gethitboxpos_shellcode.size() +
 			getdamage_shellcode.size() +
 			getaimposition_shellcode.size() +
 			runaimbot_shellcode.size() +
@@ -1110,6 +1114,7 @@ namespace {
 			atan2_shellcode.size() +
 			vectorangle_shellcode.size() +
 			fixmovement_shellcode.size() +
+			gethitboxpos_shellcode.size() +
 			getdamage_shellcode.size() +
 			getaimposition_shellcode.size() +
 			runaimbot_shellcode.size() +

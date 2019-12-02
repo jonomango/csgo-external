@@ -22,6 +22,8 @@ namespace sdk {
 		interfaces::engine_cvar.create_interface(interface_cache);
 		interfaces::material_system.create_interface(interface_cache);
 		interfaces::engine_trace.create_interface(interface_cache);
+		interfaces::model_info.create_interface(interface_cache);
+		interfaces::mdl_cache.create_interface(interface_cache);
 
 		mango::logger.success(enc_str("Found interfaces."));
 
@@ -100,6 +102,9 @@ namespace sdk {
 		// m_iGlowIndex is set in the CCSPlayer constructor, right after
 		// it calls GetGlowObjectManager() and RegisterGlowObject()
 		offsets::m_iGlowIndex = offsets::m_flFlashDuration + 0x18;
+
+		// https://github.com/ValveSoftware/source-sdk-2013/blob/master/mp/src/game/client/c_baseanimating.h#L509
+		offsets::m_BoneAccessor = netvar_cache.get<fnv1a<uint64_t>("DT_BaseAnimating:m_nForceBone")>() + 0x18;
 
 		mango::logger.success(enc_str("Found netvars."));
 

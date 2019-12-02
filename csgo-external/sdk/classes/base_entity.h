@@ -2,6 +2,10 @@
 
 #include <stdint.h>
 #include <misc/vector.h>
+#include <misc/matrix.h>
+
+#include "defines.h"
+#include "studio.h"
 
 
 namespace sdk {
@@ -59,6 +63,21 @@ namespace sdk {
 
 		// recoil
 		mango::Vec3f get_aim_punch() const;
+
+		// get the bone accessor
+		BoneAccessor get_bone_accessor() const;
+
+		// get the matrix for a bone
+		mango::Matrix3x4f get_bone_matrix(const int i) const;
+
+		// get the IClientRenderable
+		uint32_t get_client_renderable() const;
+
+		// get the model_t*
+		uint32_t get_model() const;
+
+		// get a hitbox duh
+		mstudiobbox_t get_hitbox(const int index) const;
 
 	protected:
 		uint32_t m_address = 0;

@@ -3,12 +3,14 @@
 #include <epic/pattern_scanner.h>
 #include <misc/logger.h>
 #include <misc/vector.h>
+#include <misc/matrix.h>
 #include <misc/error_codes.h>
 #include <misc/fnv_hash.h>
 #include <crypto/string_encryption.h>
 
 #include "sdk/misc/constants.h"
 #include "sdk/classes/base_combat_weapon.h"
+#include "sdk/classes/studio.h"
 
 #include "hooks/hooks.h"
 #include "features/glow.h"
@@ -87,26 +89,12 @@ void release_cheat() {
 	sdk::globals::process.release();
 }
 
-mango::Vec3f vector_angle(mango::Vec3f direction) {
-	if (direction[0] == 0.f && direction[1] == 0.f) {
-		if (direction[2] > 0.f) {
-			return { -90.f, 0.f, 0.f };
-		} else {
-			return { 90.f, 0.f, 0.f };
-		}
-	} else {
-		// yaw
-		float yaw = atan2(direction[1], direction[0]);
-		yaw *= 57.2957795131f;
-
-		// pitch
-		float pitch = direction[0] * direction[0] + direction[1] * direction[1];
-		pitch = sqrt(pitch);
-		pitch = atan2(-direction[2], pitch);
-		pitch *= 57.2957795131f;
-
-		return { pitch, yaw, 0.f };
-	}
+mango::Vec3f vector_transform(const mango::Vec3f& vec, const mango::Matrix3x4f& mat) {
+	return mango::Vec3f(
+		(vec[0] * mat[0][0]) + (vec[1] * mat[0][1]) + (vec[2] * mat[0][2]) + (1.f * mat[0][3]),
+		(vec[0] * mat[1][0]) + (vec[1] * mat[1][1]) + (vec[2] * mat[1][2]) + (1.f * mat[1][3]),
+		(vec[0] * mat[2][0]) + (vec[1] * mat[2][1]) + (vec[2] * mat[2][2]) + (1.f * mat[2][3])
+	);
 }
 
 // where the juice is
@@ -154,6 +142,15 @@ void run_cheat() {
 					// radar
 					if (config::misc::radar_enabled)
 						entity.set_spotted(true);
+
+					const auto hitbox = entity.get_hitbox(0);
+					const auto matrix = entity.get_bone_matrix(hitbox.bone);
+					
+					const auto min = vector_transform(hitbox.bbmin, matrix);
+					const auto max = vector_transform(hitbox.bbmax, matrix);
+
+					const auto position = (min + max) * mango::Vec3f(0.5f);
+					mango::logger.info(position);
 				} else /* teammates */ {
 					// glow
 					if (config::glow::teammate_enabled)

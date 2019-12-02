@@ -9,6 +9,8 @@
 #include "../classes/material_system.h"
 #include "../classes/glow_object_manager.h"
 #include "../classes/engine_trace.h"
+#include "../classes/model_info.h"
+#include "../classes/mdl_cache.h"
 
 
 namespace sdk {
@@ -42,6 +44,8 @@ namespace sdk {
 		inline EngineCvar engine_cvar;
 		inline MaterialSystem material_system;
 		inline EngineTrace engine_trace;
+		inline ModelInfo model_info;
+		inline MDLCache mdl_cache;
 	} // namespace interfaces
 	namespace offsets {
 		inline uint32_t client_state_local_player_index;
@@ -49,6 +53,9 @@ namespace sdk {
 
 		// https://github.com/VSES/SourceEngine2007/blob/master/src_main/common/protocol.h
 		inline uint32_t client_state_signon_state;
+
+		// https://github.com/ValveSoftware/source-sdk-2013/blob/master/mp/src/game/client/c_baseanimating.h#L518
+		inline uint32_t m_BoneAccessor;
 
 		inline uint32_t m_iGlowIndex;
 
@@ -97,5 +104,8 @@ namespace sdk {
 
 		// IMaterial
 		const inline uint32_t get_shader_params = 41;
+
+		// IClientRenderable
+		const inline uint32_t get_model = 8;
 	} // indices
 } // namespace sdk

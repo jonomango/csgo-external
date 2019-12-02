@@ -7,6 +7,8 @@
 
 
 namespace sdk {
+	using MDLHandle = unsigned short;
+
 	// https://github.com/ValveSoftware/source-sdk-2013/blob/master/mp/src/public/dt_common.h#L111
 	enum SendPropType : uint32_t {
 		DPT_Int = 0,
@@ -243,5 +245,37 @@ namespace sdk {
 		int16_t physicsBone;
 		uint32_t entity;
 		int hitbox;
+	};
+
+	// https://github.com/ValveSoftware/source-sdk-2013/blob/master/sp/src/public/bone_accessor.h
+	struct BoneAccessor {
+		uint32_t m_pAnimating; // C_BaseAnimating*
+		uint32_t m_pBones; // matrix3x4_t*
+		int m_ReadableBones;
+		int m_WritableBones;
+	};
+
+	// https://github.com/ValveSoftware/source-sdk-2013/blob/master/sp/src/public/model_types.h#L39
+	enum modtype_t {
+		mod_bad = 0,
+		mod_brush,
+		mod_sprite,
+		mod_studio
+	};
+
+	// couldn't find much about this, mostly used reclass
+	class model_t {
+	private:
+		char pad_0x0000[0x4]; //0x0000
+	public:
+		char name[260]; //0x12D5888
+	private:
+		char pad_0x0108[0x8]; //0x0108
+	public:
+		modtype_t modtype; //0x0110
+	private:
+		char pad_0x0114[0x24]; //0x0114
+	public:
+		MDLHandle mdl_handle; //0x0138 
 	};
 } // namespace sdk
