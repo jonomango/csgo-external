@@ -108,7 +108,10 @@ void run_cheat() {
 		features::nightmode::modulate(config::misc::nightmode_color);
 
 		// we're in game, lets do some shib
-		while (interfaces::engine_client.is_in_game() && !GetAsyncKeyState(VK_INSERT)) { 
+		while (interfaces::engine_client.is_in_game()) { 
+			if (GetAsyncKeyState(VK_INSERT))
+				return;
+
 			// noflash
 			if (config::misc::noflash_enabled)
 				local_player.set_flash_duration(0.f);

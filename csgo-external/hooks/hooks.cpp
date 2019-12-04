@@ -341,6 +341,78 @@ namespace {
 			mango::Shellcode::ret(0x8)
 		);
 
+		// void vectortransform(const vec3f* vector, const mat3x4* matrix, vec3f* output)
+		mango::Shellcode vectortransform_shellcode(
+			mango::Shellcode::prologue<false>(),
+
+			// set the iterator to 0
+			"\x31\xC9",								// xor ecx, ecx
+			// loop start:
+
+			// ++ecx
+			// if (ecx < 3) jmp to start
+			"\x41",									// inc ecx
+			"\x83\xF9\x03",							// cmp ecx, 3
+			"\x7C", uint8_t(						// jl (loop start)
+				-int8_t(2 + 4)),													// FIX OFFSET
+
+			mango::Shellcode::epilogue<false>(),
+			mango::Shellcode::ret(0xC)
+		);
+
+		// normalize angles in place
+		// void vectornormalize(vec3f* angles)
+		mango::Shellcode vectornormalize_shellcode(
+			mango::Shellcode::prologue<false>(),
+
+			// arguments:
+			// [ebp + 0x08] == angles
+			// local variables:
+			// [ebp - 0x04] == temp float
+			// [ebp - 0x08] == temp float
+			"\x83\xEC", uint8_t(					// sub esp, (size of local variables)
+				sizeof(float) +
+				sizeof(float)),
+
+			// ebx = angles
+			"\x8B\x5D\x08",							// mov ebx, [ebp + 0x08] (angles)
+
+			// set roll to 0.f
+			"\xC7\x43\x08\x00\x00\x00\x00",			// mov [ebx + 0x08], 0.f (angles[2])
+
+			// clamp pitch from [-89.f, 89.f]
+			"\xF3\x0F\x10\x03",						// movss xmm0, [ebx] (angles[0])
+			"\xC7\x45\xFC\x00\x00\xB2\xC2",			// mov [ebp - 0x04], -89.f
+			"\xF3\x0F\x5F\x45\xFC",					// maxss xmm0, [ebp - 0x04]
+			"\xC7\x45\xFC\x00\x00\xB2\x42",			// mov [ebp - 0x04], 89.f
+			"\xF3\x0F\x5D\x45\xFC",					// minss xmm0, [ebp - 0x04]
+			"\xF3\x0F\x11\x03",						// movss [ebx], xmm0 (angles[0])
+
+			// normalize yaw from [-180.f, 180.f]
+			"\xF3\x0F\x10\x43\x04",					// movss xmm0, [ebx + 0x04] (angles[1])
+			"\xC7\x45\xF8\x00\x00\xB4\x43",			// mov [ebp - 0x08], 360.f
+
+			// while (yaw > 180.f) yaw -= 360.f
+			"\xC7\x45\xFC\x00\x00\x34\x43",			// mov [ebp - 0x04], 180.f
+			"\x0F\x2E\x45\xFC",						// ucomiss xmm0, [ebp - 0x04] (180.f)
+			"\xF3\x0F\x5C\x45\xF8",					// subss xmm0, [ebp - 0x08] (360.f)
+			"\x77", uint8_t(						// ja (before the compare)
+				-int8_t(2 + 9)),
+
+			// while (yaw < 180.f) yaw += 360.f
+			"\xC7\x45\xFC\x00\x00\x34\xC3",			// mov [ebp - 0x04], -180.f
+			"\x0F\x2E\x45\xFC",						// ucomiss xmm0, [ebp - 0x04] (-180.f)
+			"\xF3\x0F\x58\x45\xF8",					// addss xmm0, [ebp - 0x08] (360.f)
+			"\x72", uint8_t(						// jb (before the compare)
+				-int8_t(2 + 9)),
+
+			// yaw = xmm0
+			"\xF3\x0F\x11\x43\x04",					// movss [ebx + 0x04], xmm0 (angles[1])
+
+			mango::Shellcode::epilogue<false>(),
+			mango::Shellcode::ret(0x4)
+		);
+
 		// void fixmovement(CUserCmd* cmd)
 		mango::Shellcode fixmovement_shellcode(
 			mango::Shellcode::prologue<false>(),
@@ -361,6 +433,8 @@ namespace {
 			"\x8D\x40\x24",							// lea eax, [eax + 0x24] (movement)
 			"\x50",									// push eax
 			"\xE8", uint32_t(-int32_t(				// call vectorangle
+				vectornormalize_shellcode.size() +
+				vectortransform_shellcode.size() +
 				vectorangle_shellcode.size() +
 				5 + 17)),															// FIX OFFSET
 
@@ -451,9 +525,12 @@ namespace {
 			// [ebp + 0x0C]			== hitbox id
 			// [ebp + 0x10]			== position
 			// local variables:
-			// [ebp - 0x04]			== hitbox
+			// [ebp - 0x04]			== matrix
+			// [ebp - 0x10]			== min
+			// [ebp - 0x1C]			== max
 			"\x83\xEC", uint8_t(					// sub esp, (size of local variables)
-				sizeof(uint32_t)),
+				sizeof(mango::Vec3f) +
+				sizeof(mango::Vec3f)),
 
 			// get the model_t*
 			"\x8B\x4D\x08",							// mov ecx, [ebp + 0x08] (entity)
@@ -481,7 +558,6 @@ namespace {
 			"\x69\xD2", uint32_t(					// imul edx, sizeof(mstudiobbox_t)
 				sizeof(mstudiobbox_t)),
 			"\x01\xD0",								// add eax, edx
-			"\x89\x45\xFC",							// mov [ebp - 0x04], eax
 
 			// eax = offset into bone matrix array
 			"\x8B\x80", uint32_t(					// mov eax, [eax + bone]
@@ -489,18 +565,23 @@ namespace {
 			"\x69\xC0", uint32_t(					// imul eax, sizeof(Matrix3x4f)
 				sizeof(mango::Matrix3x4f)),
 
-			// ebx = bone matrix
+			// [ebp - 0x04] = bone matrix
 			"\x8B\x5D\x08",							// mov ebx, [ebp + 0x08] (entity)
 			"\x8B\x9B", uint32_t(					// mov ebx, [ebx + m_pBones]
 				offsets::m_BoneAccessor + offsetof(BoneAccessor, m_pBones)),
 			"\x01\xC3",								// add ebx, eax
+			"\x89\x5D\xFC",							// mov [ebp - 0x04], ebx
+
+			// eax = &position
+			// ebx = &matrix
+			"\x8B\x45\x10",							// mov eax, [ebp + 0x10] (position)
+			"\x8B\x5D\xFC",							// mov ebx, [ebp - 0x04] (matrix)
 
 			// position[0] = matrix[0][3]
 			// position[1] = matrix[1][3]
 			// position[2] = matrix[2][3]
-			"\x8B\x45\x10",							// mov eax, [ebp + 0x10] (position)
 			"\x8B\x53\x0C",							// mov edx, [ebx + 0x0C] (matrix[0][3])
-			"\x89\x10",								// mov [eax], edx (position[0])
+			"\x89\x10",		 						// mov [eax + 0x00], edx (position[0])
 			"\x8B\x53\x1C",							// mov edx, [ebx + 0x1C] (matrix[1][3])
 			"\x89\x50\x04",							// mov [eax + 0x04], edx (position[1])
 			"\x8B\x53\x2C",							// mov edx, [ebx + 0x2C] (matrix[2][3])
@@ -874,6 +955,8 @@ namespace {
 				getdamage_shellcode.size() +
 				gethitboxpos_shellcode.size() +
 				fixmovement_shellcode.size() +
+				vectornormalize_shellcode.size() +
+				vectortransform_shellcode.size() +
 				vectorangle_shellcode.size() +
 				5 + 371)),															// FIX OFFSET
 
@@ -1074,6 +1157,21 @@ namespace {
 				gethitboxpos_shellcode.size() +
 				fixmovement_shellcode.size() +
 				5 + 100)),															// FIX OFFSET
+
+			// normalize cmd->viewangles
+			"\x8B\x45\x0C",							// mov eax, [ebp + 0xC] (cmd)
+			"\x83\xC0\x0C",							// add eax, 0xC (viewangles offset)
+			"\x50",									// push eax
+			"\xE8", uint32_t(-int32_t(				// call vectornormalize
+				runbhop_shellcode.size() +
+				runantiaim_shellcode.size() +
+				runaimbot_shellcode.size() +
+				getaimposition_shellcode.size() +
+				getdamage_shellcode.size() +
+				gethitboxpos_shellcode.size() +
+				fixmovement_shellcode.size() +
+				vectornormalize_shellcode.size() +
+				5 + 112)),															// FIX OFFSET
 			
 			// return false
 			"\x31\xC0",								// xor eax, eax
@@ -1085,6 +1183,8 @@ namespace {
 		create_move_shellcode_addr = uint32_t(uintptr_t(globals::process.alloc_virt_mem(
 			atan2_shellcode.size() +
 			vectorangle_shellcode.size() + 
+			vectortransform_shellcode.size() +
+			vectornormalize_shellcode.size() +
 			fixmovement_shellcode.size() +
 			gethitboxpos_shellcode.size() +
 			getdamage_shellcode.size() +
@@ -1098,24 +1198,41 @@ namespace {
 		atan2_shellcode.write(globals::process, create_move_shellcode_addr);
 
 		// vectorangle
-		vectorangle_shellcode.write(globals::process, create_move_shellcode_addr 
-			+ atan2_shellcode.size());
+		vectorangle_shellcode.write(globals::process, create_move_shellcode_addr +
+			atan2_shellcode.size());
+
+		// vectortransform
+		vectortransform_shellcode.write(globals::process, create_move_shellcode_addr +
+			atan2_shellcode.size() +
+			vectorangle_shellcode.size());
+
+		// vectornormalize
+		vectornormalize_shellcode.write(globals::process, create_move_shellcode_addr +
+			atan2_shellcode.size() +
+			vectorangle_shellcode.size() +
+			vectortransform_shellcode.size());
 
 		// fixmovement
 		fixmovement_shellcode.write(globals::process, create_move_shellcode_addr +
 			atan2_shellcode.size() +
-			vectorangle_shellcode.size());
+			vectorangle_shellcode.size() +
+			vectortransform_shellcode.size() +
+			vectornormalize_shellcode.size());
 
 		// gethitboxpos
 		gethitboxpos_shellcode.write(globals::process, create_move_shellcode_addr +
 			atan2_shellcode.size() +
 			vectorangle_shellcode.size() +
+			vectortransform_shellcode.size() +
+			vectornormalize_shellcode.size() +
 			fixmovement_shellcode.size());
 
 		// getdamage
 		getdamage_shellcode.write(globals::process, create_move_shellcode_addr +
 			atan2_shellcode.size() +
 			vectorangle_shellcode.size() +
+			vectortransform_shellcode.size() +
+			vectornormalize_shellcode.size() +
 			fixmovement_shellcode.size() +
 			gethitboxpos_shellcode.size());
 
@@ -1123,6 +1240,8 @@ namespace {
 		getaimposition_shellcode.write(globals::process, create_move_shellcode_addr + 
 			atan2_shellcode.size() +
 			vectorangle_shellcode.size() +
+			vectortransform_shellcode.size() +
+			vectornormalize_shellcode.size() +
 			fixmovement_shellcode.size() +
 			gethitboxpos_shellcode.size() +
 			getdamage_shellcode.size());
@@ -1131,6 +1250,8 @@ namespace {
 		runaimbot_shellcode.write(globals::process, create_move_shellcode_addr +
 			atan2_shellcode.size() +
 			vectorangle_shellcode.size() +
+			vectortransform_shellcode.size() +
+			vectornormalize_shellcode.size() +
 			fixmovement_shellcode.size() +
 			gethitboxpos_shellcode.size() +
 			getdamage_shellcode.size() +
@@ -1140,6 +1261,8 @@ namespace {
 		runantiaim_shellcode.write(globals::process, create_move_shellcode_addr +
 			atan2_shellcode.size() +
 			vectorangle_shellcode.size() +
+			vectortransform_shellcode.size() +
+			vectornormalize_shellcode.size() +
 			fixmovement_shellcode.size() +
 			gethitboxpos_shellcode.size() +
 			getdamage_shellcode.size() +
@@ -1150,6 +1273,8 @@ namespace {
 		runbhop_shellcode.write(globals::process, create_move_shellcode_addr +
 			atan2_shellcode.size() +
 			vectorangle_shellcode.size() +
+			vectortransform_shellcode.size() +
+			vectornormalize_shellcode.size() +
 			fixmovement_shellcode.size() +
 			gethitboxpos_shellcode.size() +
 			getdamage_shellcode.size() +
@@ -1161,6 +1286,8 @@ namespace {
 		createmove_shellcode.write(globals::process, create_move_shellcode_addr + 
 			atan2_shellcode.size() +
 			vectorangle_shellcode.size() + 
+			vectortransform_shellcode.size() +
+			vectornormalize_shellcode.size() +
 			fixmovement_shellcode.size() +
 			gethitboxpos_shellcode.size() +
 			getdamage_shellcode.size() +
@@ -1173,6 +1300,8 @@ namespace {
 		client_mode_hook.hook(indices::create_move, create_move_shellcode_addr +
 			atan2_shellcode.size() +
 			vectorangle_shellcode.size() +
+			vectortransform_shellcode.size() +
+			vectornormalize_shellcode.size() +
 			fixmovement_shellcode.size() +
 			gethitboxpos_shellcode.size() +
 			getdamage_shellcode.size() +
