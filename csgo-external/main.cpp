@@ -161,7 +161,6 @@ int main() {
 	try {
 		setup_cheat();
 		mango::ScopeGuard _guard(&release_cheat);
-
 		run_cheat();
 	} catch (const std::exception& e) {
 		mango::logger.error(e.what());

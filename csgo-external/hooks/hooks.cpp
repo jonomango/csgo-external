@@ -341,23 +341,64 @@ namespace {
 			mango::Shellcode::ret(0x8)
 		);
 
-		// void vectortransform(const vec3f* vector, const mat3x4* matrix, vec3f* output)
+		// transforms the vector in-place
+		// void vectortransform(const vec3f* vector, const mat3x4* matrix)
 		mango::Shellcode vectortransform_shellcode(
 			mango::Shellcode::prologue<false>(),
 
+			// arguments:
+			// [ebp + 0x08] == vector
+			// [ebp + 0x0C] == matrix
+
+			// xmm5 = vector[0]
+			// xmm6 = vector[1]
+			// xmm7 = vector[2]
+			"\x8B\x45\x08",							// mov eax, [ebp + 0x08] (vector)
+			"\xF3\x0F\x10\x28",						// movss xmm5, [eax] (vector[0])
+			"\xF3\x0F\x10\x70\x04",					// movss xmm6, [eax + 0x04] (vector[1])
+			"\xF3\x0F\x10\x78\x08",					// movss xmm7, [eax + 0x08] (vector[2])
+
 			// set the iterator to 0
 			"\x31\xC9",								// xor ecx, ecx
-			// loop start:
+
+			// get the column
+			// ebx = matrix[ecx]
+			"\x89\xCB",								// mov ebx, ecx
+			"\x6B\xDB\x10",							// imul ebx, 0x10
+			"\x03\x5D\x0C",							// add ebx, [ebp + 0x0C] (matrix address)
+
+			// xmm0 = column[0] * vector[0]
+			"\xF3\x0F\x10\x03",						// movss xmm0, [ebx] (column[0])
+			"\xF3\x0F\x59\xC5",						// mulss xmm0, xmm5 (vector[0])
+
+			// xmm0 += column[1] * vector[1]
+			"\xF3\x0F\x10\x4B\x04",					// movss xmm1, [ebx + 0x04] (column[1])
+			"\xF3\x0F\x59\xCE",						// mulss xmm1, xmm6 (vector[1])
+			"\xF3\x0F\x58\xC1",						// addss xmm0, xmm1
+
+			// xmm0 += column[2] * vector[2]
+			"\xF3\x0F\x10\x4B\x08",					// movss xmm1, [ebx + 0x08] (column[2])
+			"\xF3\x0F\x59\xCF",						// mulss xmm1, xmm7 (vector[2])
+			"\xF3\x0F\x58\xC1",						// addss xmm0, xmm1
+
+			// xmm0 += column[3]
+			"\xF3\x0F\x58\x43\x0C",					// addss xmm0, [ebx + 0x0C] (column[3])
+
+			// vector[ecx] = xmm0
+			"\x89\xCB",								// mov ebx, ecx
+			"\x6B\xDB\x04",							// imul ebx, 0x04
+			"\x03\x5D\x08",							// add ebx, [ebp + 0x08] (vector address)
+			"\xF3\x0F\x11\x03",						// movss [ebx], xmm0
 
 			// ++ecx
-			// if (ecx < 3) jmp to start
+			// if (ecx < 3) jmp to loop start
 			"\x41",									// inc ecx
 			"\x83\xF9\x03",							// cmp ecx, 3
 			"\x7C", uint8_t(						// jl (loop start)
-				-int8_t(2 + 4)),													// FIX OFFSET
+				-int8_t(2 + 63)),													// FIX OFFSET
 
 			mango::Shellcode::epilogue<false>(),
-			mango::Shellcode::ret(0xC)
+			mango::Shellcode::ret(0x8)
 		);
 
 		// normalize angles in place
@@ -528,9 +569,12 @@ namespace {
 			// [ebp - 0x04]			== matrix
 			// [ebp - 0x10]			== min
 			// [ebp - 0x1C]			== max
+			// [ebp - 0x20]			== tmp float
 			"\x83\xEC", uint8_t(					// sub esp, (size of local variables)
+				sizeof(uint32_t) +
 				sizeof(mango::Vec3f) +
-				sizeof(mango::Vec3f)),
+				sizeof(mango::Vec3f) +
+				sizeof(float)),
 
 			// get the model_t*
 			"\x8B\x4D\x08",							// mov ecx, [ebp + 0x08] (entity)
@@ -559,6 +603,26 @@ namespace {
 				sizeof(mstudiobbox_t)),
 			"\x01\xD0",								// add eax, edx
 
+			// min = bbmin
+			"\x8D\x98", uint32_t(					// lea ebx, [eax + bbmin]
+				offsetof(mstudiobbox_t, bbmin)),
+			"\x8B\x13",								// mov edx, [ebx] (bbmin[0])
+			"\x89\x55\xF0",							// mov [ebp - 0x10], edx (min[0])
+			"\x8B\x53\x04",							// mov edx, [ebx + 0x04] (bbmin[1])
+			"\x89\x55\xF4",							// mov [ebp - 0x0C], edx (min[1])
+			"\x8B\x53\x08",							// mov edx, [ebx + 0x08] (bbmin[2])
+			"\x89\x55\xF8",							// mov [ebp - 0x08], edx (min[2])
+
+			// max = bbmax
+			"\x8D\x98", uint32_t(					// lea ebx, [eax + bbmax]
+				offsetof(mstudiobbox_t, bbmax)),
+			"\x8B\x13",								// mov edx, [ebx] (bbmax[0])
+			"\x89\x55\xE4",							// mov [ebp - 0x1C], edx (max[0])
+			"\x8B\x53\x04",							// mov edx, [ebx + 0x04] (bbmax[1])
+			"\x89\x55\xE8",							// mov [ebp - 0x18], edx (max[1])
+			"\x8B\x53\x08",							// mov edx, [ebx + 0x08] (bbmax[2])
+			"\x89\x55\xEC",							// mov [ebp - 0x14], edx (max[2])
+
 			// eax = offset into bone matrix array
 			"\x8B\x80", uint32_t(					// mov eax, [eax + bone]
 				offsetof(mstudiobbox_t, bone)),
@@ -570,22 +634,52 @@ namespace {
 			"\x8B\x9B", uint32_t(					// mov ebx, [ebx + m_pBones]
 				offsets::m_BoneAccessor + offsetof(BoneAccessor, m_pBones)),
 			"\x01\xC3",								// add ebx, eax
-			"\x89\x5D\xFC",							// mov [ebp - 0x04], ebx
+			"\x89\x5D\xFC",							// mov [ebp - 0x04], ebx (matrix)
 
-			// eax = &position
-			// ebx = &matrix
-			"\x8B\x45\x10",							// mov eax, [ebp + 0x10] (position)
-			"\x8B\x5D\xFC",							// mov ebx, [ebp - 0x04] (matrix)
+			// vectortransform(min)
+			"\xFF\x75\xFC",							// push [ebp - 0x04] (matrix)
+			"\x8D\x45\xF0",							// lea eax, [ebp - 0x10] (min)
+			"\x50",									// push eax
+			"\xE8", uint32_t(-int32_t(				// call vectortransform
+				fixmovement_shellcode.size() +
+				vectornormalize_shellcode.size() +
+				vectortransform_shellcode.size() +
+				5 + 136)),															// FIX OFFSET
 
-			// position[0] = matrix[0][3]
-			// position[1] = matrix[1][3]
-			// position[2] = matrix[2][3]
-			"\x8B\x53\x0C",							// mov edx, [ebx + 0x0C] (matrix[0][3])
-			"\x89\x10",		 						// mov [eax + 0x00], edx (position[0])
-			"\x8B\x53\x1C",							// mov edx, [ebx + 0x1C] (matrix[1][3])
-			"\x89\x50\x04",							// mov [eax + 0x04], edx (position[1])
-			"\x8B\x53\x2C",							// mov edx, [ebx + 0x2C] (matrix[2][3])
-			"\x89\x50\x08",							// mov [eax + 0x08], edx (position[2])
+			// vectortransform(max)
+			"\xFF\x75\xFC",							// push [ebp - 0x04] (matrix)
+			"\x8D\x45\xE4",							// lea eax, [ebp - 0x1C] (max)
+			"\x50",									// push eax
+			"\xE8", uint32_t(-int32_t(				// call vectortransform
+				fixmovement_shellcode.size() +
+				vectornormalize_shellcode.size() +
+				vectortransform_shellcode.size() +
+				5 + 148)),															// FIX OFFSET
+
+			// ebx = &position
+			"\x8B\x5D\x10",							// mov ebx, [ebp + 0x10] (position)
+
+			// xmm1 = 0.5f
+			"\xC7\x45\xE0\x00\x00\x00\x3F",			// mov [ebp - 0x20], 0.5f (tmp float)
+			"\xF3\x0F\x10\x4D\xE0",					// movss xmm1, [ebp - 0x20]
+
+			// position[0] = (min[0] + max[0]) * 0.5f
+			"\xF3\x0F\x10\x45\xF0",					// movss xmm0, [ebp - 0x10] (min[0])
+			"\xF3\x0F\x58\x45\xE4",					// addss xmm0, [ebp - 0x1C] (max[0])
+			"\xF3\x0F\x59\xC1",						// mulss xmm0, xmm1 (0.5f)
+			"\xF3\x0F\x11\x03",						// movss [ebx], xmm0 (position[0])
+
+			// position[1] = (min[1] + max[1]) * 0.5f
+			"\xF3\x0F\x10\x45\xF4",					// movss xmm0, [ebp - 0x0C] (min[1])
+			"\xF3\x0F\x58\x45\xE8",					// addss xmm0, [ebp - 0x18] (max[1])
+			"\xF3\x0F\x59\xC1",						// mulss xmm0, xmm1 (0.5f)
+			"\xF3\x0F\x11\x43\x04",					// movss [ebx + 0x04], xmm0 (position[1])
+
+			// position[2] = (min[2] + max[2]) * 0.5f
+			"\xF3\x0F\x10\x45\xF8",					// movss xmm0, [ebp - 0x08] (min[2])
+			"\xF3\x0F\x58\x45\xEC",					// addss xmm0, [ebp - 0x14] (max[2])
+			"\xF3\x0F\x59\xC1",						// mulss xmm0, xmm1 (0.5f)
+			"\xF3\x0F\x11\x43\x08",					// movss [ebx + 0x08], xmm0 (position[2])
 
 			mango::Shellcode::epilogue<false>(),
 			mango::Shellcode::ret(0xC)
