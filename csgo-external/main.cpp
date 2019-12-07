@@ -54,17 +54,14 @@ void setup_logger() {
 
 // sets up stuff (interfaces, netvars, ...)
 void setup_cheat() {
-	// get window
-	const auto csgo_hwnd = FindWindow(nullptr, enc_str("Counter-Strike: Global Offensive").c_str());
-	if (!csgo_hwnd)
-		throw std::runtime_error(enc_str("Failed to find csgo's window"));
+	const auto pids = mango::Process::get_pids_by_name(enc_str("csgo.exe"));
+	if (pids.empty()) {
+		throw std::runtime_error(enc_str("csgo not open."));
+	} else if (pids.size() > 1) {
+		throw std::runtime_error(enc_str("Multiple csgo's open."));
+	}
 
-	// get process id from window handle
-	DWORD process_id;
-	if (!GetWindowThreadProcessId(csgo_hwnd, &process_id))
-		throw std::runtime_error(enc_str("Failed to get process id"));
-
-	mango::logger.success(enc_str("Found Process ID: 0x"), std::hex, std::uppercase, process_id);
+	mango::logger.success(enc_str("Found Process ID: 0x"), std::hex, std::uppercase, pids.front());
 
 	// options for setting up the process
 	mango::Process::SetupOptions options;
@@ -72,7 +69,7 @@ void setup_cheat() {
 
 	// setup process
 	mango::logger.info(enc_str("Setting up process..."));
-	sdk::globals::process.setup(process_id, options);
+	sdk::globals::process.setup(pids.front(), options);
 	mango::logger.success(enc_str("Process initialized: "), sdk::globals::process.get_name());
 
 	// gets interfaces and stuffs and shibs

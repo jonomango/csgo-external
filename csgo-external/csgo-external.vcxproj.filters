@@ -75,6 +75,9 @@
     <ClCompile Include="sdk\classes\mdl_cache.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="hooks\createmove.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="sdk\classes\client_entity_list.h">
@@ -144,6 +147,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="sdk\classes\studio.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="hooks\createmove.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
