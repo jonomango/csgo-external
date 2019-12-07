@@ -9,6 +9,14 @@
 namespace sdk {
 	using MDLHandle = unsigned short;
 
+	struct CUtlVector {
+		uint32_t m_pData;
+	private:
+		uint8_t _padding[0x8];
+	public:
+		int m_iSize;
+	};
+
 	// https://github.com/ValveSoftware/source-sdk-2013/blob/master/mp/src/public/dt_common.h#L111
 	enum SendPropType : uint32_t {
 		DPT_Int = 0,

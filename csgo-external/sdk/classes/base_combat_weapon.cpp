@@ -4,8 +4,9 @@
 
 
 namespace sdk {
-	// next time when this weapon is ready to attack
-	float BaseCombatWeapon::get_next_primary_attack() const {
-		return globals::process.read<float>(this->m_address + offsets::m_flNextPrimaryAttack);
+	BaseCombatWeapon::BaseCombatWeapon(const uint32_t address) noexcept {
+		this->m_address = address;
+
+		this->m_flNextPrimaryAttack.setup(globals::process, this->m_address + offsets::m_flNextPrimaryAttack);
 	}
 } // namespace sdk

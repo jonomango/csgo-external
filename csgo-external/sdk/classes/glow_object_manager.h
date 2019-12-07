@@ -2,12 +2,14 @@
 
 #include <stdint.h>
 #include <misc/color.h>
+#include <epic/read_write_variable.h>
 
 #include "base_entity.h"
 #include "defines.h"
 
 
 namespace sdk {
+	// https://github.com/ValveSoftware/source-sdk-2013/blob/master/mp/src/game/client/glow_outline_effect.h
 	class GlowObjectManager {
 	public:
 		GlowObjectManager() = default;
@@ -17,17 +19,9 @@ namespace sdk {
 		operator uint32_t() const noexcept { return this->m_address; }
 
 	public:
-		// on map change
-		void update_object_definitions();
-
-		// get num of entries
-		int get_size() const;
-
-		// get the array of glow objects
-		uint32_t get_glow_object_array() const;
+		mango::ReadWriteVariable<CUtlVector> m_GlowObjectDefinitions;
 
 	private:
-		uint32_t m_address = 0,
-			m_glow_object_definitions = 0;
+		uint32_t m_address = 0;
 	};
 } // namespace sdk

@@ -111,29 +111,26 @@ void run_cheat() {
 
 			// noflash
 			if (config::misc::noflash_enabled)
-				local_player.set_flash_duration(0.f);
+				local_player.m_flFlashDuration = 0.f;
 
 			// cache the value (barely helps but whatev)
-			const auto local_player_team = local_player.get_team();
-
-			// this updates often (probably when objects are added/removed)
-			globals::glow_object_manager.update_object_definitions();
+			const auto local_player_team = local_player.m_iTeamNum;
 
 			// iterate over every player
 			for (int i = 1; i < 64; ++i) {
 				const auto entity = interfaces::client_entity_list.get_client_entity(i);
-				if (!entity || entity == local_player || entity.is_dormant() || entity.get_health() <= 0)
+				if (!entity || entity == local_player || entity.m_bDormant || entity.m_iHealth <= 0)
 					continue;
 
 				// enemies
-				if (entity.get_team() != local_player_team) {
+				if (entity.m_iTeamNum != local_player_team) {
 					// glow
 					if (config::glow::enemy_enabled)
 						features::glow::draw_entity(entity, config::glow::enemy_color);
 
 					// radar
 					if (config::misc::radar_enabled)
-						entity.set_spotted(true);
+						entity.m_bSpotted = true;
 				} else /* teammates */ {
 					// glow
 					if (config::glow::teammate_enabled)
