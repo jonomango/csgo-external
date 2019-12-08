@@ -1,10 +1,12 @@
 #include "createmove.h"
 
 #include "hooks.h"
+#include "../config.h"
 #include "../sdk/misc/constants.h"
 #include "../sdk/classes/defines.h"
 
 #include <epic/shellcode.h>
+#include <epic/vmt_helpers.h>
 #include <crypto/string_encryption.h>
 
 
@@ -16,7 +18,7 @@ namespace hooks {
 	void hook_createmove() {
 		using namespace sdk;
 
-		const auto orig_create_move = globals::process.get_vfunc<uint32_t>(globals::client_mode, indices::create_move);
+		const auto orig_create_move = mango::get_vfunc<uint32_t>(globals::process, globals::client_mode, indices::create_move);
 		const auto con_msg = globals::process.get_proc_addr(enc_str("tier0.dll"), enc_str("?ConMsg@@YAXPBDZZ"));
 
 		const std::string vector_str("vector: [%f, %f, %f]\n");
@@ -847,8 +849,29 @@ namespace hooks {
 			// [ebp + 0x14] == eyeposition
 			// [ebp + 0x18] == aimposition
 			// local variables:
+			// [ebp - 0x04] == temp float
 			"\x83\xEC", uint8_t(					// sub esp, (size of local variables)
-				0),
+				sizeof(float)),
+
+			// xmm0 = accuracy
+			"\x8B\x4D\x10",							// mov ecx, [ebp + 0x10] (weapon)
+			"\x8B\x01",								// mov eax, [ecx]
+			"\xFF\x90", uint32_t(					// call [eax + (get_inaccuracy offset)
+				indices::get_inaccuracy * 4),
+			"\xD9\x5D\xFC",							// fstp [ebp - 0x04]
+			"\xF3\x0F\x10\x45\xFC",					// movss xmm0, [ebp - 0x04]
+			
+			// compare against our accuracy threshold
+			"\xC7\x45\xFC", uint32_t(				// mov [ebp - 0x04], threshold
+				*reinterpret_cast<uint32_t*>(&config::aimbot::accuracy_threshold)),
+			"\x0F\x2E\x45\xFC",						// ucomiss xmm0, [ebp - 0x04]
+			"\x76", uint8_t(						// jbe (return true)
+				8),
+			
+			// return false
+			"\xB0\x00",								// mov al, 0x00
+			mango::Shellcode::epilogue<false>(),
+			mango::Shellcode::ret(0x14),
 
 			// return true
 			"\xB0\x01",								// mov al, 0x01
@@ -875,7 +898,8 @@ namespace hooks {
 				sizeof(uint32_t) +
 				sizeof(mango::Vec3f) +
 				sizeof(mango::Vec3f) +
-				sizeof(mango::Vec3f)),
+				sizeof(mango::Vec3f) +
+				sizeof(uint32_t)),
 
 			// ebx = localplayer->m_hActiveWeapon
 			"\x8B\x5D\x08",							// mov ebx, [ebp + 0x08] (localplayer)

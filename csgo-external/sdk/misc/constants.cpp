@@ -5,8 +5,11 @@
 #include "datamap_cache.h"
 
 #include <epic/pattern_scanner.h>
+#include <epic/vmt_helpers.h>
 #include <misc/fnv_hash.h>
 #include <crypto/string_encryption.h>
+
+#include <fstream>
 
 
 namespace sdk {
@@ -35,27 +38,27 @@ namespace sdk {
 
 		// dynamically get the globalvars address (ref &Init)
 		// https://github.com/ValveSoftware/source-sdk-2013/blob/0d8dceea4310fde5706b3ce1c70609d72a38efdf/mp/src/game/client/cdll_client_int.cpp#L871
-		const auto init = globals::process.get_vfunc<uint32_t>(
-			interfaces::client, indices::init);
+		const auto init = mango::get_vfunc<uint32_t>(
+			globals::process, interfaces::client, indices::init);
 		const auto globals_vars_addr = globals::process.read<uint32_t>(init + 0x1B);
 		globals::global_vars_base = globals::process.read<uint32_t>(globals_vars_addr);
 
 		// dynamically get the clientmode address (ref @HudProcessInput)
-		const auto hud_process_input = globals::process.get_vfunc<uint32_t>(
-			interfaces::client, indices::hud_process_input);
+		const auto hud_process_input = mango::get_vfunc<uint32_t>(
+			globals::process, interfaces::client, indices::hud_process_input);
 		const auto client_mode_addr = globals::process.read<uint32_t>(hud_process_input + 0x5);
 		globals::client_mode = globals::process.read<uint32_t>(client_mode_addr);
 
 		// dynamically get the glow object manager address (ref @DoPostScreenSpaceEffects)
-		const auto do_post_screen_space_effects = globals::process.get_vfunc<uint32_t>(
-			globals::client_mode, indices::do_post_screen_space_effects);
+		const auto do_post_screen_space_effects = mango::get_vfunc<uint32_t>(
+			globals::process, globals::client_mode, indices::do_post_screen_space_effects);
 		const auto get_glow_manager = do_post_screen_space_effects + 0x22 + 0x4 + // jmp is relative to next instruction
 			globals::process.read<uint32_t>(do_post_screen_space_effects + 0x22);
 		globals::glow_object_manager = GlowObjectManager(globals::process.read<uint32_t>(get_glow_manager + 0x19));
 
 		// @GetLocalPlayerIndex
-		const auto get_local_player_index = globals::process.get_vfunc<uint32_t>(
-			interfaces::engine_client, indices::get_local_player_index);
+		const auto get_local_player_index = mango::get_vfunc<uint32_t>(
+			globals::process, interfaces::engine_client, indices::get_local_player_index);
 		
 		// get client state address from the mov operand (ref @GetLocalPlayerIndex)
 		const auto client_state_addr = globals::process.read<uint32_t>(get_local_player_index + 0x10);
@@ -66,18 +69,18 @@ namespace sdk {
 			globals::process.read<uint32_t>(get_local_player_index + 0x16);
 		
 		// dynamically get the signon state offset (ref @IsInGame)
-		const auto is_in_game = globals::process.get_vfunc<uint32_t>(
-			interfaces::engine_client, indices::is_in_game);
+		const auto is_in_game = mango::get_vfunc<uint32_t>(
+			globals::process, interfaces::engine_client, indices::is_in_game);
 		offsets::client_state_signon_state = globals::process.read<uint32_t>(is_in_game + 0x7);
 		
 		// dynamically get the viewangles offset (ref @GetViewAngles)
-		const auto get_view_angles = globals::process.get_vfunc<uint32_t>(
-			interfaces::engine_client, indices::get_view_angles);
+		const auto get_view_angles = mango::get_vfunc<uint32_t>(
+			globals::process, interfaces::engine_client, indices::get_view_angles);
 		offsets::client_state_view_angles = globals::process.read<uint32_t>(get_view_angles + 0x1C);
 		
 		// dynamically get the client class head node (ref @GetAllClasses)
-		const auto get_all_classes = globals::process.get_vfunc<uint32_t>(
-			interfaces::client, indices::get_all_classes);
+		const auto get_all_classes = mango::get_vfunc<uint32_t>(
+			globals::process, interfaces::client, indices::get_all_classes);
 		globals::client_class_head = globals::process.read<uint32_t>(get_all_classes + 0x1);
 
 		using namespace mango;
@@ -98,6 +101,7 @@ namespace sdk {
 		offsets::m_nTickBase = netvar_cache.get<fnv1a<uint64_t>("DT_LocalPlayerExclusive:m_nTickBase")>();
 		offsets::m_hActiveWeapon = netvar_cache.get<fnv1a<uint64_t>("DT_BaseCombatCharacter:m_hActiveWeapon")>();
 		offsets::m_flNextPrimaryAttack = netvar_cache.get<fnv1a<uint64_t>("DT_LocalActiveWeaponData:m_flNextPrimaryAttack")>();
+		offsets::m_fAccuracyPenalty = netvar_cache.get<fnv1a<uint64_t>("DT_WeaponCSBase:m_fAccuracyPenalty")>();
 
 		// m_iGlowIndex is set in the CCSPlayer constructor, right after
 		// it calls GetGlowObjectManager() and RegisterGlowObject()
@@ -113,6 +117,7 @@ namespace sdk {
 		datamap_cache.cache();
 
 		// get datamap fields
+		offsets::pl = datamap_cache.get<fnv1a<uint64_t>("C_BasePlayer:pl")>();
 		offsets::m_Local = datamap_cache.get<fnv1a<uint64_t>("C_BasePlayer:m_Local")>();
 		offsets::m_vecViewOffset = datamap_cache.get<fnv1a<uint64_t>("C_BaseEntity:m_vecViewOffset")>();
 		offsets::m_aimPunchAngle = datamap_cache.get<fnv1a<uint64_t>("CPlayerLocalData:m_aimPunchAngle")>();

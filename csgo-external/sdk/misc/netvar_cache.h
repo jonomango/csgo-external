@@ -2,6 +2,9 @@
 
 #include <string>
 #include <unordered_map>
+#include <optional>
+#include <ostream>
+#include <functional>
 
 #include <epic/process.h>
 
@@ -12,7 +15,7 @@ namespace sdk {
 		NetvarCache() = default;
 
 		// cache netvars for later use
-		void cache();
+		void cache(std::optional<std::reference_wrapper<std::ostream>> stream = {});
 
 		// get a netvar by table and prop name hash: fnv1a("table:prop")
 		uint32_t get(const uint64_t hash) const;
@@ -23,7 +26,8 @@ namespace sdk {
 
 	private:
 		// recursively parse a RecvTable
-		void parse_table(const uint32_t table_address);
+		void parse_table(const uint32_t table_address, std::optional<
+			std::reference_wrapper<std::ostream>> stream, int indent);
 
 	private:
 		std::unordered_map<uint64_t, uint32_t> m_netvars;

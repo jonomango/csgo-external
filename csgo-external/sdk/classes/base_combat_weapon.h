@@ -15,5 +15,6 @@ namespace sdk {
 
 	public:
 		mango::ReadWriteVariable<float> m_flNextPrimaryAttack;
+		mango::ReadWriteVariable<float> m_fAccuracyPenalty;
 	};
 } // namespace sdk

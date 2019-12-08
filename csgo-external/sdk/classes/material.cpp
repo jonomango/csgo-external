@@ -2,12 +2,14 @@
 
 #include "../misc/constants.h"
 
+#include <epic/vmt_helpers.h>
+
 
 namespace sdk {
 	// material name
 	std::string Material::get_name() const {
-		// ref @GetName
-		const auto vfunc = globals::process.get_vfunc<uint32_t>(this->m_address, 0);
+		const auto vfunc = mango::get_vfunc<uint32_t>(
+			globals::process, this->m_address, indices::get_name);
 
 		// add ecx, offset
 		const auto offset = uint32_t(globals::process.read<uint8_t>(vfunc + 2));
@@ -16,8 +18,8 @@ namespace sdk {
 
 	// material texture group name
 	std::string Material::get_texture_group_name() const {
-		// ref @GetTextureGroupName
-		const auto vfunc = globals::process.get_vfunc<uint32_t>(this->m_address, 1);
+		const auto vfunc = mango::get_vfunc<uint32_t>(
+			globals::process, this->m_address, indices::get_texture_group_name);
 
 		// add ecx, offset
 		const auto offset = uint32_t(globals::process.read<uint8_t>(vfunc + 2));
@@ -27,8 +29,8 @@ namespace sdk {
 	// an array of IMaterialVar*
 	uint32_t Material::get_shader_params() const {
 		// ref @GetShaderParams
-		uint16_t func_bytes = globals::process.read<uint16_t>(globals::process.get_vfunc<uint32_t>(
-			this->m_address, indices::get_shader_params));
+		uint16_t func_bytes = globals::process.read<uint16_t>(mango::get_vfunc<uint32_t>(
+			globals::process, this->m_address, indices::get_shader_params));
 
 		// black magic type shit
 		if (func_bytes == 0x418B) {

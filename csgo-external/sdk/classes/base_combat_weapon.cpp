@@ -8,5 +8,6 @@ namespace sdk {
 		this->m_address = address;
 
 		this->m_flNextPrimaryAttack.setup(globals::process, this->m_address + offsets::m_flNextPrimaryAttack);
+		this->m_fAccuracyPenalty.setup(globals::process, this->m_address + offsets::m_fAccuracyPenalty);
 	}
 } // namespace sdk

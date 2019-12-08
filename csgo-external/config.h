@@ -15,4 +15,7 @@ namespace config {
 			noflash_enabled = true;
 		inline mango::rgbaf nightmode_color = mango::rgbaf(0.05f);
 	} // namespace misc
+	namespace aimbot {
+		inline float accuracy_threshold = 0.014f;
+	} // namespace aimbot
 } // namespace config

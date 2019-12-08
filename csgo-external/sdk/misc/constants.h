@@ -71,9 +71,11 @@ namespace sdk {
 		inline uint32_t m_nTickBase;
 		inline uint32_t m_hActiveWeapon;
 		inline uint32_t m_flNextPrimaryAttack;
+		inline uint32_t m_fAccuracyPenalty;
 
 		// datamap fields
-		inline uint32_t m_Local;
+		inline uint32_t pl; // https://github.com/ValveSoftware/source-sdk-2013/blob/master/mp/src/public/PlayerState.h
+		inline uint32_t m_Local; // https://github.com/ValveSoftware/source-sdk-2013/blob/master/mp/src/game/client/c_playerlocaldata.h
 		inline uint32_t m_vecViewOffset;
 		inline uint32_t m_aimPunchAngle;	
 
@@ -106,9 +108,14 @@ namespace sdk {
 		const inline uint32_t do_post_screen_space_effects = 44;
 
 		// IMaterial
+		const inline uint32_t get_name = 0;
+		const inline uint32_t get_texture_group_name = 1;
 		const inline uint32_t get_shader_params = 41;
 
 		// IClientRenderable
 		const inline uint32_t get_model = 8;
+
+		// CBaseCombatWeapon
+		const inline uint32_t get_inaccuracy = 479;
 	} // indices
 } // namespace sdk

@@ -4,8 +4,9 @@
 #include <misc/logger.h>
 #include <misc/vector.h>
 #include <misc/matrix.h>
-#include <misc/error_codes.h>
 #include <misc/fnv_hash.h>
+#include <misc/scope_guard.h>
+#include <misc/error_codes.h>
 #include <crypto/string_encryption.h>
 
 #include "sdk/misc/constants.h"
@@ -56,7 +57,7 @@ void setup_logger() {
 void setup_cheat() {
 	const auto pids = mango::Process::get_pids_by_name(enc_str("csgo.exe"));
 	if (pids.empty()) {
-		throw std::runtime_error(enc_str("csgo not open."));
+		throw std::runtime_error(enc_str("csgo is not open."));
 	} else if (pids.size() > 1) {
 		throw std::runtime_error(enc_str("Multiple csgo's open."));
 	}

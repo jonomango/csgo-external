@@ -3,6 +3,9 @@
 #include <stdint.h>
 #include <string>
 #include <unordered_map>
+#include <ostream>
+#include <optional>
+#include <functional>
 
 
 namespace sdk {
@@ -12,7 +15,7 @@ namespace sdk {
 		DatamapCache() = default;
 
 		// cache datamap fields
-		void cache();
+		void cache(std::optional<std::reference_wrapper<std::ostream>> stream = {});
 
 		// get a field by class and field name hash: fnv1a("class:field")
 		uint32_t get(const uint64_t hash) const;
@@ -23,7 +26,8 @@ namespace sdk {
 
 	private:
 		// add each field in the datamap to m_fields
-		void parse_datamap(const uint32_t datamap_addr);
+		void parse_datamap(const uint32_t datamap_addr, std::optional<
+			std::reference_wrapper<std::ostream>> stream);
 
 	private:
 		std::unordered_map<uint64_t, uint32_t> m_fields;

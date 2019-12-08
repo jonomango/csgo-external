@@ -2,6 +2,8 @@
 
 #include "../misc/constants.h"
 
+#include <epic/vmt_helpers.h>
+
 
 namespace sdk {
 	BaseEntity::BaseEntity(const uint32_t address) noexcept : m_address(address) {
@@ -40,7 +42,7 @@ namespace sdk {
 		// https://github.com/ValveSoftware/source-sdk-2013/blob/master/mp/src/game/client/c_baseentity.h#L1295
 		// mov eax, [ecx + model_offset]
 		static const auto model_offset = globals::process.read<uint8_t>(
-			globals::process.get_vfunc<uint32_t>(client_renderable, indices::get_model) + 0x02);
+			mango::get_vfunc<uint32_t>(globals::process, client_renderable, indices::get_model) + 0x02);
 
 		return globals::process.read<uint32_t>(client_renderable + model_offset);
 	}

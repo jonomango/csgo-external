@@ -8,7 +8,7 @@
 
 namespace sdk {
 	// cache datamap offsets
-	void DatamapCache::cache() {
+	void DatamapCache::cache(std::optional<std::reference_wrapper<std::ostream>> stream) {
 		for (const auto address : mango::find_all_patterns(globals::process, enc_str("client_panorama.dll"),
 			enc_str("C7 05 ? ? ? ? ? ? ? ? C7 05 ? ? ? ? ? ? ? ? C3 CC CC CC CC CC CC CC CC CC CC CC"))) {
 
@@ -30,7 +30,7 @@ namespace sdk {
 				globals::process.read<uint32_t>(data_desc_addr) != data_desc)
 				continue;
 			
-			this->parse_datamap(data_desc_addr);
+			this->parse_datamap(data_desc_addr, stream);
 		}
 	}
 
@@ -44,13 +44,17 @@ namespace sdk {
 	}
 
 	// add each field in the datamap to m_fields
-	void DatamapCache::parse_datamap(const uint32_t datamap_addr) {
+	void DatamapCache::parse_datamap(const uint32_t datamap_addr, std::optional<std::reference_wrapper<std::ostream>> stream) {
 		const auto datamap = globals::process.read<Datamap>(datamap_addr);
 
 		// read the classname
 		char class_name[256];
 		globals::process.read(datamap.m_class_name, class_name, 256);
 		class_name[255] = '\0';
+
+		// optional
+		if (stream)
+			(*stream).get() << class_name << std::endl;
 
 		// for each field
 		for (size_t i = 0; i < datamap.m_num_fields; ++i) {
@@ -64,7 +68,14 @@ namespace sdk {
 			field_name[255] = '\0';
 
 			const auto hash = mango::fnv1a<uint64_t>((std::string(class_name) + ':' + field_name).c_str());
-			this->m_fields[hash] = type_desc.m_field_offset[0];
+			const auto offset = type_desc.m_field_offset[0];
+			this->m_fields[hash] = offset;
+
+			// optional
+			if (stream) {
+				(*stream).get() << enc_str("    ") << field_name << enc_str(" 0x") << 
+					std::hex << std::uppercase << offset << std::endl;
+			}
 		}
 	}
 } // namespace sdk
