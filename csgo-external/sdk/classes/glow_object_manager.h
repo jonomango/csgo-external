@@ -4,7 +4,6 @@
 #include <misc/color.h>
 #include <epic/read_write_variable.h>
 
-#include "base_entity.h"
 #include "defines.h"
 
 

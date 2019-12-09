@@ -72,11 +72,12 @@ namespace sdk {
 		inline uint32_t m_hActiveWeapon;
 		inline uint32_t m_flNextPrimaryAttack;
 		inline uint32_t m_fAccuracyPenalty;
+		inline uint32_t m_vecVelocity;
+		inline uint32_t m_vecViewOffset;
 
 		// datamap fields
 		inline uint32_t pl; // https://github.com/ValveSoftware/source-sdk-2013/blob/master/mp/src/public/PlayerState.h
 		inline uint32_t m_Local; // https://github.com/ValveSoftware/source-sdk-2013/blob/master/mp/src/game/client/c_playerlocaldata.h
-		inline uint32_t m_vecViewOffset;
 		inline uint32_t m_aimPunchAngle;	
 
 		// hardcoded
@@ -114,6 +115,11 @@ namespace sdk {
 
 		// IClientRenderable
 		const inline uint32_t get_model = 8;
+
+		// IClientNetworkable
+		const inline uint32_t get_client_class = 2;
+		const inline uint32_t is_dormant = 9;
+		const inline uint32_t entindex = 10;
 
 		// CBaseCombatWeapon
 		const inline uint32_t get_inaccuracy = 479;

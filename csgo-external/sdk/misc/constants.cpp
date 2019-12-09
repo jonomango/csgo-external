@@ -85,41 +85,58 @@ namespace sdk {
 
 		using namespace mango;
 
-		// cache netvars
+		// get netvars
 		NetvarCache netvar_cache;
 		netvar_cache.cache();
 		
-		// get netvars
-		offsets::m_iHealth = netvar_cache.get<fnv1a<uint64_t>("DT_BasePlayer:m_iHealth")>();
-		offsets::m_fFlags = netvar_cache.get<fnv1a<uint64_t>("DT_BasePlayer:m_fFlags")>();
-		offsets::m_bSpotted = netvar_cache.get<fnv1a<uint64_t>("DT_BaseEntity:m_bSpotted")>();
-		offsets::m_iTeamNum = netvar_cache.get<fnv1a<uint64_t>("DT_BaseEntity:m_iTeamNum")>();
-		offsets::m_vecOrigin = netvar_cache.get<fnv1a<uint64_t>("DT_BaseEntity:m_vecOrigin")>();
+		// C_CSPlayer
 		offsets::m_angEyeAngles = netvar_cache.get<fnv1a<uint64_t>("DT_CSPlayer:m_angEyeAngles")>();
 		offsets::m_bGunGameImmunity = netvar_cache.get<fnv1a<uint64_t>("DT_CSPlayer:m_bGunGameImmunity")>();
 		offsets::m_flFlashDuration = netvar_cache.get<fnv1a<uint64_t>("DT_CSPlayer:m_flFlashDuration")>();
-		offsets::m_nTickBase = netvar_cache.get<fnv1a<uint64_t>("DT_LocalPlayerExclusive:m_nTickBase")>();
-		offsets::m_hActiveWeapon = netvar_cache.get<fnv1a<uint64_t>("DT_BaseCombatCharacter:m_hActiveWeapon")>();
-		offsets::m_flNextPrimaryAttack = netvar_cache.get<fnv1a<uint64_t>("DT_LocalActiveWeaponData:m_flNextPrimaryAttack")>();
-		offsets::m_fAccuracyPenalty = netvar_cache.get<fnv1a<uint64_t>("DT_WeaponCSBase:m_fAccuracyPenalty")>();
 
-		// m_iGlowIndex is set in the CCSPlayer constructor, right after
+		// m_iGlowIndex is set in the C_CSPlayer constructor, right after
 		// it calls GetGlowObjectManager() and RegisterGlowObject()
 		offsets::m_iGlowIndex = offsets::m_flFlashDuration + 0x18;
 
-		// https://github.com/ValveSoftware/source-sdk-2013/blob/master/mp/src/game/client/c_baseanimating.h#L509
+		// C_BasePlayer
+		offsets::m_iHealth = netvar_cache.get<fnv1a<uint64_t>("DT_BasePlayer:m_iHealth")>();
+		offsets::m_fFlags = netvar_cache.get<fnv1a<uint64_t>("DT_BasePlayer:m_fFlags")>();
+
+		// https://github.com/ValveSoftware/source-sdk-2013/blob/master/mp/src/game/client/c_baseplayer.cpp#L215
+		offsets::m_nTickBase = netvar_cache.get<fnv1a<uint64_t>("DT_LocalPlayerExclusive:m_nTickBase")>();
+		offsets::m_vecViewOffset = netvar_cache.get<fnv1a<uint64_t>("DT_LocalPlayerExclusive:m_vecViewOffset[0]")>();
+		offsets::m_vecVelocity = netvar_cache.get<fnv1a<uint64_t>("DT_LocalPlayerExclusive:m_vecVelocity[0]")>();
+
+		// C_BaseAnimating
 		offsets::m_BoneAccessor = netvar_cache.get<fnv1a<uint64_t>("DT_BaseAnimating:m_nForceBone")>() + 0x18;
+
+		// C_BaseEntity
+		offsets::m_bSpotted = netvar_cache.get<fnv1a<uint64_t>("DT_BaseEntity:m_bSpotted")>();
+		offsets::m_iTeamNum = netvar_cache.get<fnv1a<uint64_t>("DT_BaseEntity:m_iTeamNum")>();
+		offsets::m_vecOrigin = netvar_cache.get<fnv1a<uint64_t>("DT_BaseEntity:m_vecOrigin")>();
+
+		// C_BaseCombatCharacter
+		offsets::m_hActiveWeapon = netvar_cache.get<fnv1a<uint64_t>("DT_BaseCombatCharacter:m_hActiveWeapon")>();
+
+		// C_WeaponCSBase
+		offsets::m_fAccuracyPenalty = netvar_cache.get<fnv1a<uint64_t>("DT_WeaponCSBase:m_fAccuracyPenalty")>();
+
+		// C_BaseCombatWeapon
+
+		// https://github.com/ValveSoftware/source-sdk-2013/blob/master/sp/src/game/shared/basecombatweapon_shared.cpp#L2739
+		offsets::m_flNextPrimaryAttack = netvar_cache.get<fnv1a<uint64_t>("DT_LocalActiveWeaponData:m_flNextPrimaryAttack")>();
 
 		mango::logger.success(enc_str("Found netvars."));
 
-		// cache datamap fields
+		// get datamap fields
 		DatamapCache datamap_cache;
 		datamap_cache.cache();
 
-		// get datamap fields
+		// C_BasePlayer
 		offsets::pl = datamap_cache.get<fnv1a<uint64_t>("C_BasePlayer:pl")>();
 		offsets::m_Local = datamap_cache.get<fnv1a<uint64_t>("C_BasePlayer:m_Local")>();
-		offsets::m_vecViewOffset = datamap_cache.get<fnv1a<uint64_t>("C_BaseEntity:m_vecViewOffset")>();
+
+		// https://github.com/ValveSoftware/source-sdk-2013/blob/master/mp/src/game/client/c_playerlocaldata.h#L22
 		offsets::m_aimPunchAngle = datamap_cache.get<fnv1a<uint64_t>("CPlayerLocalData:m_aimPunchAngle")>();
 
 		mango::logger.success(enc_str("Found datamap fields."));

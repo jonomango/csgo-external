@@ -10,7 +10,8 @@
 #include <crypto/string_encryption.h>
 
 #include "sdk/misc/constants.h"
-#include "sdk/classes/base_combat_weapon.h"
+#include "sdk/classes/c_weaponcsbase.h"
+#include "sdk/classes/c_csplayer.h"
 #include "sdk/classes/studio.h"
 
 #include "hooks/hooks.h"
@@ -117,25 +118,35 @@ void run_cheat() {
 			// cache the value (barely helps but whatev)
 			const auto local_player_team = local_player.m_iTeamNum;
 
+			const auto weapon = interfaces::client_entity_list.get_client_entity<
+				C_WeaponCSBase>(local_player.m_hActiveWeapon & 0xFFF);
+
+			const auto shdr = globals::process.read<studiohdr_t>(interfaces::model_info.get_studio_hdr(weapon.get_model()));
+			mango::logger.info(shdr.name);
+
 			// iterate over every player
 			for (int i = 1; i < 64; ++i) {
-				const auto entity = interfaces::client_entity_list.get_client_entity(i);
-				if (!entity || entity == local_player || entity.m_bDormant || entity.m_iHealth <= 0)
+				const auto player = interfaces::client_entity_list.get_client_entity<C_CSPlayer>(i);
+				if (!player.get_client_entity_addr())
+					continue;
+
+				// ignore self, dormant players, and dead players
+				if (player.get_client_entity_addr() == local_player.get_client_entity_addr() || player.is_dormant() || player.m_iHealth <= 0)
 					continue;
 
 				// enemies
-				if (entity.m_iTeamNum != local_player_team) {
+				if (player.m_iTeamNum != local_player_team) {
 					// glow
 					if (config::glow::enemy_enabled)
-						features::glow::draw_entity(entity, config::glow::enemy_color);
-
+						features::glow::draw_player(player, config::glow::enemy_color);
+				
 					// radar
 					if (config::misc::radar_enabled)
-						entity.m_bSpotted = true;
+						player.m_bSpotted = true;
 				} else /* teammates */ {
 					// glow
 					if (config::glow::teammate_enabled)
-						features::glow::draw_entity(entity, config::glow::teammate_color);
+						features::glow::draw_player(player, config::glow::teammate_color);
 				}
 			}
 
