@@ -8,13 +8,13 @@ namespace sdk {
 	class C_BaseAnimatingOverlay : public C_BaseAnimating {
 	public:
 		C_BaseAnimatingOverlay() = default;
-		explicit C_BaseAnimatingOverlay(const uint32_t address) noexcept
-			: m_base_animating_overlay_addr(address), C_BaseAnimating(address) {}
+		explicit C_BaseAnimatingOverlay(const uint32_t address) noexcept;
 
 		// get the underlying address
 		uint32_t get_base_animating_overlay_addr() const { return this->m_base_animating_overlay_addr; }
 
 	public:
+		mango::RWVariable<CUtlVector> m_AnimOverlay;
 
 	private:
 		uint32_t m_base_animating_overlay_addr = 0;

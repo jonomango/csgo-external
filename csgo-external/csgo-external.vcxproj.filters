@@ -18,15 +18,6 @@
     <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="sdk\classes\client_entity_list.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="sdk\classes\engine_client.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="sdk\classes\client.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="sdk\misc\constants.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -39,34 +30,13 @@
     <ClCompile Include="sdk\misc\datamap_cache.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="sdk\classes\glow_object_manager.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="features\glow.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="sdk\classes\engine_cvar.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="sdk\classes\material_system.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="sdk\classes\material.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="features\nightmode.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="hooks\hooks.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="sdk\classes\engine_trace.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="sdk\classes\model_info.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="sdk\classes\mdl_cache.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="hooks\createmove.cpp">
@@ -99,17 +69,47 @@
     <ClCompile Include="sdk\classes\c_weaponcsbase.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="sdk\classes\imaterial.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\classes\cglowobjectmanager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\classes\imodelloader.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\classes\cbaseclientstate.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="features\modelchanger.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\classes\c_baseanimatingoverlay.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\interfaces\ivmodelinfo.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\interfaces\ivengineclient.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\interfaces\imdlcache.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\interfaces\imaterialsystem.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\interfaces\icvar.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\interfaces\icliententitylist.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\interfaces\chlclient.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="sdk\classes\client_entity_list.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="sdk\classes\engine_client.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="sdk\classes\client.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="sdk\misc\constants.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -119,46 +119,19 @@
     <ClInclude Include="sdk\misc\netvar_cache.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="sdk\classes\defines.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="sdk\misc\interface_base.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="sdk\misc\datamap_cache.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="config.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="sdk\classes\glow_object_manager.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="features\glow.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="sdk\classes\engine_cvar.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="sdk\classes\material_system.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="sdk\classes\material.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="features\nightmode.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="hooks\hooks.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="sdk\classes\engine_trace.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="sdk\classes\model_info.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="sdk\classes\mdl_cache.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="sdk\classes\studio.h">
@@ -204,6 +177,48 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="sdk\classes\c_weaponcsbase.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\classes\imaterial.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\classes\cglowobjectmanager.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\classes\imodelloader.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\classes\cbaseclientstate.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="features\modelchanger.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\interfaces\ivmodelinfo.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\interfaces\ivengineclient.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\interfaces\imdlcache.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\interfaces\imaterialsystem.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\interfaces\ienginetrace.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\interfaces\icvar.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\interfaces\icliententitylist.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\interfaces\chlclient.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\common.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

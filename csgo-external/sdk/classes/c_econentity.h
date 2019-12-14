@@ -13,9 +13,6 @@ namespace sdk {
 		// get the underlying address
 		uint32_t get_econ_entity_addr() const { return this->m_econ_entity_addr; }
 
-	public:
-
-
 	private:
 		uint32_t m_econ_entity_addr = 0;
 	};

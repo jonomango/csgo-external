@@ -14,7 +14,7 @@ namespace sdk {
 		uint32_t get_weaponcs_base_addr() const { return this->m_weaponcs_base_addr; }
 
 	public:
-		mango::ReadWriteVariable<float> m_fAccuracyPenalty;
+		mango::RWVariable<float> m_fAccuracyPenalty;
 
 	private:
 		uint32_t m_weaponcs_base_addr = 0;

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <epic/process.h>
+#include <misc/fnv_hash.h>
 
 #include <string>
 #include <unordered_map>
@@ -11,7 +12,7 @@ namespace sdk {
 	public:
 		struct InterfaceID {
 			InterfaceID() = default;
-			constexpr InterfaceID(const uint64_t hash, const int version = -1) 
+			constexpr InterfaceID(const mango::Fnv1a<uint64_t> hash, const int version = -1) 
 				: m_hash(hash), m_version(version) {}
 
 			// for unordered_map
@@ -20,7 +21,7 @@ namespace sdk {
 					this->m_version == other.m_version;
 			}
 
-			uint64_t m_hash; // fnv1a hash
+			uint64_t m_hash;
 			int m_version;
 		};
 
@@ -36,8 +37,14 @@ namespace sdk {
 		// cache all interfaces
 		void cache();
 
-		// get an interface: InterfaceCache::get(InterfaceID(fnv1a<uint64_t>("ModuleName:InterfaceName"), OptionalVersionNum))
+		// get an interface: InterfaceCache::get({ "ModuleName:InterfaceName", OptionalVersionNum })
 		uint32_t get(const InterfaceID interface_id) const;
+
+		// forces compile-time hash
+		template <uint64_t Hash, int Version = -1>
+		uint32_t get() const {
+			return this->get({ Hash, Version });
+		}
 
 	private:
 		// cache all interfaces for a module

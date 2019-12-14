@@ -1,7 +1,7 @@
 #include "netvar_cache.h"
 
 #include "../misc/constants.h"
-#include "../classes/defines.h"
+#include "../common.h"
 
 #include <crypto/string_encryption.h>
 
@@ -22,7 +22,7 @@ namespace sdk {
 		}
 	}
 
-	// get a netvar by table and prop name hash: fnv1a("table:prop")
+	// get a netvar by table and prop name hash: Fnv1a("table:prop")
 	uint32_t NetvarCache::get(const uint64_t hash) const {
 		if (const auto& it = this->m_netvars.find(hash); it != this->m_netvars.end())
 			return it->second;
@@ -55,16 +55,14 @@ namespace sdk {
 			const auto prop = globals::process.read<RecvProp>(recv_table.m_props_array + sizeof(RecvProp) * i);
 
 			// frog in a frog
-			if (prop.m_type == DPT_DataTable) {
+			if (prop.m_type == DPT_DataTable)
 				this->parse_table(prop.m_recv_table, stream, indent);
-				continue;
-			}
 
 			char prop_name[256];
 			globals::process.read(prop.m_name, prop_name, 256);
 			prop_name[255] = '\0';
 
-			const auto hash = mango::fnv1a<uint64_t>((std::string(table_name) + ":" + prop_name).c_str());
+			const auto hash = mango::Fnv1a<uint64_t>((std::string(table_name) + ":" + prop_name).c_str());
 			this->m_netvars[hash] = prop.m_offset;
 
 			// optional

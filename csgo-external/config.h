@@ -1,6 +1,7 @@
 #pragma once
 
 #include <misc/color.h>
+#include <crypto/string_encryption.h>
 
 
 namespace config {
@@ -18,4 +19,8 @@ namespace config {
 	namespace aimbot {
 		inline float accuracy_threshold = 0.015f;
 	} // namespace aimbot
+	namespace models {
+		inline std::string player = enc_str("models/player/custom_player/legacy/ctm_st6_variante.mdl"),
+			knife = enc_str("models/weapons/v_knife_butterfly.mdl");
+	} // namespace models
 } // namespace config

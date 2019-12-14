@@ -1,16 +1,20 @@
 #pragma once
 
+#include "../classes/c_csplayer.h"
+
 #include <stdint.h>
-
-#include "../misc/interface_base.h"
-
-#include "c_csplayer.h"
 
 
 namespace sdk {
-	// https://github.com/ValveSoftware/source-sdk-2013/blob/master/mp/src/public/icliententitylist.h
-	class ClientEntityList : public InterfaceBase<ClientEntityList,
-		mango::fnv1a<uint64_t>("client_panorama.dll:VClientEntityList")> {
+	// https://github.com/ValveSoftware/source-sdk-2013/blob/master/mp/src/public/icliententitylist.h#L28
+	class IClientEntityList {
+	public:
+		IClientEntityList() noexcept : m_address(0) {}
+		explicit IClientEntityList(const uint32_t address) noexcept : m_address(address) {}
+
+		// get the underlying address
+		constexpr operator uint32_t() const noexcept { return this->m_address; }
+
 	public:
 		// get an entity by their index
 		template <typename T = IClientEntity>
@@ -23,5 +27,8 @@ namespace sdk {
 	private:
 		// https://github.com/ValveSoftware/source-sdk-2013/blob/master/mp/src/public/icliententitylist.h#L38
 		uint32_t get_client_entity_imp(int index) const;
+
+	private:
+		uint32_t m_address = 0;
 	};
 } // namespace sdk

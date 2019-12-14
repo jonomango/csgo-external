@@ -7,6 +7,8 @@
 #include <optional>
 #include <functional>
 
+#include <misc/fnv_hash.h>
+
 
 namespace sdk {
 	// https://github.com/ValveSoftware/source-sdk-2013/blob/master/sp/src/public/datamap.h
@@ -17,7 +19,7 @@ namespace sdk {
 		// cache datamap fields
 		void cache(std::optional<std::reference_wrapper<std::ostream>> stream = {});
 
-		// get a field by class and field name hash: fnv1a("class:field")
+		// get a field by class and field name hash: Fnv1a("class:field")
 		uint32_t get(const uint64_t hash) const;
 
 		// forces hash to be compile time constant

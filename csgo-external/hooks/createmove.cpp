@@ -3,7 +3,7 @@
 #include "hooks.h"
 #include "../config.h"
 #include "../sdk/misc/constants.h"
-#include "../sdk/classes/defines.h"
+#include "../sdk/common.h"
 
 #include <epic/shellcode.h>
 #include <epic/vmt_helpers.h>
@@ -1253,7 +1253,7 @@ namespace hooks {
 				interfaces::engine_client),
 			"\x8B\x01",								// mov eax, [ecx]
 			"\xFF\x50", uint8_t(					// call [eax + get_local_player offset]
-				indices::get_local_player_index * 4),
+				indices::get_local_player * 4),
 
 			// get the localplayer
 			"\x50",									// push eax (localplayer index)

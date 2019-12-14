@@ -1,18 +1,18 @@
-#include "engine_cvar.h"
+#include "icvar.h"
 
 #include "../misc/constants.h"
 
 
 namespace sdk {
-	// return a pointer to the head of the (linked) list of commands
-	uint32_t EngineCvar::get_command_head() const {
+	// https://github.com/ValveSoftware/source-sdk-2013/blob/master/mp/src/public/icvar.h#L79
+	uint32_t ICvar::get_commands() const {
 		return globals::process.read<uint32_t>(this->m_address + 0x30);
 	}
 
-	// get the address of the cvar
-	uint32_t EngineCvar::find_var(const std::string_view name) const {
+	// https://github.com/ValveSoftware/source-sdk-2013/blob/master/mp/src/public/icvar.h#L75
+	uint32_t ICvar::find_command(const std::string_view name) const {
 		// iterate over every command until we find a matching one
-		for (auto command_addr = this->get_command_head(); command_addr;) {
+		for (auto command_addr = this->get_commands(); command_addr;) {
 			const auto command = globals::process.read<ConCommandBase>(command_addr);
 
 			// read the name

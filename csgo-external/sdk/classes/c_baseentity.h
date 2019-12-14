@@ -1,14 +1,13 @@
 #pragma once
 
+#include "icliententity.h"
+#include "studio.h"
+#include "../common.h"
+
 #include <stdint.h>
 #include <misc/vector.h>
 #include <misc/matrix.h>
 #include <epic/read_write_variable.h>
-
-#include "icliententity.h"
-
-#include "defines.h"
-#include "studio.h"
 
 
 namespace sdk {
@@ -22,9 +21,9 @@ namespace sdk {
 		uint32_t get_base_entity_addr() const { return this->m_base_entity_addr; }
 
 	public:
-		mango::ReadWriteVariable<bool> m_bSpotted;
-		mango::ReadWriteVariable<int> m_iTeamNum;
-		mango::ReadWriteVariable<mango::Vec3f> m_vecOrigin;
+		mango::RWVariable<bool> m_bSpotted;
+		mango::RWVariable<int> m_iTeamNum;
+		mango::RWVariable<mango::Vec3f> m_vecOrigin;
 
 	private:
 		uint32_t m_base_entity_addr = 0;

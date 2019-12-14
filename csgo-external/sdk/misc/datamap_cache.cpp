@@ -34,7 +34,7 @@ namespace sdk {
 		}
 	}
 
-	// get a field by class and field name hash: fnv1a("class:field")
+	// get a field by class and field name hash: Fnv1a("class:field")
 	uint32_t DatamapCache::get(const uint64_t hash) const {
 		if (const auto& it = this->m_fields.find(hash); it != this->m_fields.end())
 			return it->second;
@@ -67,7 +67,7 @@ namespace sdk {
 			globals::process.read(type_desc.m_field_name, field_name, 256);
 			field_name[255] = '\0';
 
-			const auto hash = mango::fnv1a<uint64_t>((std::string(class_name) + ':' + field_name).c_str());
+			const auto hash = mango::Fnv1a<uint64_t>((std::string(class_name) + ':' + field_name).c_str());
 			const auto offset = type_desc.m_field_offset[0];
 			this->m_fields[hash] = offset;
 

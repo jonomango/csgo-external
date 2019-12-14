@@ -14,7 +14,7 @@ namespace sdk {
 		uint32_t get_base_combat_weapon_addr() const { return this->m_base_combat_weapon_addr; }
 
 	public:
-		mango::ReadWriteVariable<float> m_flNextPrimaryAttack;
+		mango::RWVariable<float> m_flNextPrimaryAttack;
 
 	private:
 		uint32_t m_base_combat_weapon_addr = 0;

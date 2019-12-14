@@ -1,9 +1,7 @@
 #include "hooks.h"
 
-#include "../sdk/misc/constants.h"
-#include "../sdk/classes/defines.h"
-
 #include "createmove.h"
+#include "../sdk/misc/constants.h"
 
 #include <thread>
 

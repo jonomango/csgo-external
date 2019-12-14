@@ -14,12 +14,12 @@ namespace sdk {
 		uint32_t get_base_player_addr() const { return this->m_base_player_addr; }
 
 	public:
-		mango::ReadWriteVariable<int> m_iHealth;
-		mango::ReadWriteVariable<int> m_fFlags;
-		mango::ReadWriteVariable<int> m_nTickBase;
-		mango::ReadWriteVariable<mango::Vec3f> m_vecVelocity;
-		mango::ReadWriteVariable<mango::Vec3f> m_vecViewOffset;
-		mango::ReadWriteVariable<mango::Vec3f> m_aimPunchAngle;
+		mango::RWVariable<int> m_iHealth;
+		mango::RWVariable<int> m_fFlags;
+		mango::RWVariable<int> m_nTickBase;
+		mango::RWVariable<mango::Vec3f> m_vecVelocity;
+		mango::RWVariable<mango::Vec3f> m_vecViewOffset;
+		mango::RWVariable<mango::Vec3f> m_aimPunchAngle;
 
 	private:
 		uint32_t m_base_player_addr = 0;

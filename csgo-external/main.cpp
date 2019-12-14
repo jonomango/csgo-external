@@ -17,6 +17,7 @@
 #include "hooks/hooks.h"
 #include "features/glow.h"
 #include "features/nightmode.h"
+#include "features/modelchanger.h"
 
 #include "config.h"
 
@@ -92,7 +93,7 @@ void release_cheat() {
 void run_cheat() {
 	using namespace sdk;
 
-	while (!GetAsyncKeyState(VK_INSERT)) try {
+	while (!GetAsyncKeyState(VK_INSERT)) {
 		if (!interfaces::engine_client.is_in_game()) {
 			std::this_thread::sleep_for(std::chrono::milliseconds(100));
 			continue;
@@ -100,29 +101,40 @@ void run_cheat() {
 
 		mango::logger.info(enc_str("Entering main loop..."));
 
-		// update local_player every time we join a game
-		const auto local_player = interfaces::client_entity_list.get_local_player();
-
 		// modulate on game load
 		features::nightmode::modulate(config::misc::nightmode_color);
 
+		// custom models
+		features::modelchanger::update_player(config::models::player);
+		features::modelchanger::update_knife(config::models::knife);
+		globals::client_state.force_full_update();
+		std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
 		// we're in game, lets do some shib
-		while (interfaces::engine_client.is_in_game()) { 
+		while (interfaces::engine_client.is_in_game()) {
 			if (GetAsyncKeyState(VK_INSERT))
 				return;
+
+			const auto c = offsetof(studiohdr_t, studiohdr2index);
+
+			// get localplayer
+			const auto local_player = interfaces::client_entity_list.get_local_player();
+
+			const auto weapon = interfaces::client_entity_list.get_client_entity<C_WeaponCSBase>(local_player.m_hActiveWeapon() & 0xFFF);
+			if (const auto studiohdr = interfaces::model_info.get_studio_hdr(weapon.get_model())) {
+				if (const auto virtualmodel = interfaces::model_info.get_virtual_model(studiohdr)) {
+					if (const auto seqdesc = studiohdr().get_local_sequence_desc(&studiohdr, 0)) {
+						mango::logger.info(studiohdr().name, " ", std::hex, &studiohdr, " ", &virtualmodel, " ", &seqdesc);
+					}
+				}
+			}
+
+			//mango::logger.info(globals::process.read<int>(weapon.get_weaponcs_base_addr() + 0x28BC));
+			//globals::process.write<int>(weapon.get_weaponcs_base_addr() + 0x28BC, 2);
 
 			// noflash
 			if (config::misc::noflash_enabled)
 				local_player.m_flFlashDuration = 0.f;
-
-			// cache the value (barely helps but whatev)
-			const auto local_player_team = local_player.m_iTeamNum;
-
-			const auto weapon = interfaces::client_entity_list.get_client_entity<
-				C_WeaponCSBase>(local_player.m_hActiveWeapon & 0xFFF);
-
-			const auto shdr = globals::process.read<studiohdr_t>(interfaces::model_info.get_studio_hdr(weapon.get_model()));
-			mango::logger.info(shdr.name);
 
 			// iterate over every player
 			for (int i = 1; i < 64; ++i) {
@@ -131,15 +143,15 @@ void run_cheat() {
 					continue;
 
 				// ignore self, dormant players, and dead players
-				if (player.get_client_entity_addr() == local_player.get_client_entity_addr() || player.is_dormant() || player.m_iHealth <= 0)
+				if (player.get_client_entity_addr() == local_player.get_client_entity_addr() || player.is_dormant() || player.m_iHealth() <= 0)
 					continue;
 
 				// enemies
-				if (player.m_iTeamNum != local_player_team) {
+				if (player.m_iTeamNum() != local_player.m_iTeamNum()) {
 					// glow
 					if (config::glow::enemy_enabled)
 						features::glow::draw_player(player, config::glow::enemy_color);
-				
+
 					// radar
 					if (config::misc::radar_enabled)
 						player.m_bSpotted = true;
@@ -154,9 +166,6 @@ void run_cheat() {
 		}
 
 		mango::logger.info(enc_str("Exiting main loop..."));
-	} catch (mango::MangoError& e) {
-		mango::logger.error(e.what());
-		mango::logger.info(enc_str("Ignoring error..."));
 	}
 }
 

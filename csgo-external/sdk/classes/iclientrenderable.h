@@ -1,6 +1,9 @@
 #pragma once
 
 #include "iclientnetworkable.h"
+#include "../common.h"
+
+#include <epic/read_write_variable.h>
 
 
 namespace sdk {
@@ -16,7 +19,7 @@ namespace sdk {
 
 	public:
 		// https://github.com/ValveSoftware/source-sdk-2013/blob/master/mp/src/public/iclientrenderable.h#L86
-		uint32_t get_model() const;
+		mango::RWVariable<model_t> get_model() const;
 
 	private:
 		uint32_t m_client_renderable_addr = 0;

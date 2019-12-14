@@ -123,12 +123,13 @@
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
+      <WholeProgramOptimization>false</WholeProgramOptimization>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <GenerateDebugInformation>false</GenerateDebugInformation>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>mango-library-$(PlatformTarget).lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
@@ -142,59 +143,65 @@
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
+      <WholeProgramOptimization>false</WholeProgramOptimization>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <GenerateDebugInformation>false</GenerateDebugInformation>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>mango-library-$(PlatformTarget).lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="features\glow.cpp" />
+    <ClCompile Include="features\modelchanger.cpp" />
     <ClCompile Include="features\nightmode.cpp" />
     <ClCompile Include="hooks\createmove.cpp" />
     <ClCompile Include="hooks\hooks.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="sdk\classes\cbaseclientstate.cpp" />
     <ClCompile Include="sdk\classes\c_baseanimating.cpp" />
+    <ClCompile Include="sdk\classes\c_baseanimatingoverlay.cpp" />
     <ClCompile Include="sdk\classes\c_basecombatweapon.cpp" />
     <ClCompile Include="sdk\classes\c_basecombatcharacter.cpp" />
     <ClCompile Include="sdk\classes\c_baseentity.cpp" />
-    <ClCompile Include="sdk\classes\client.cpp" />
+    <ClCompile Include="sdk\interfaces\chlclient.cpp" />
     <ClCompile Include="sdk\classes\c_weaponcsbase.cpp" />
     <ClCompile Include="sdk\classes\iclientnetworkable.cpp" />
     <ClCompile Include="sdk\classes\iclientrenderable.cpp" />
     <ClCompile Include="sdk\classes\c_baseplayer.cpp" />
     <ClCompile Include="sdk\classes\c_csplayer.cpp" />
-    <ClCompile Include="sdk\classes\engine_client.cpp" />
-    <ClCompile Include="sdk\classes\engine_cvar.cpp" />
-    <ClCompile Include="sdk\classes\engine_trace.cpp" />
-    <ClCompile Include="sdk\classes\material.cpp" />
-    <ClCompile Include="sdk\classes\material_system.cpp" />
-    <ClCompile Include="sdk\classes\mdl_cache.cpp" />
-    <ClCompile Include="sdk\classes\model_info.cpp" />
+    <ClCompile Include="sdk\classes\imodelloader.cpp" />
+    <ClCompile Include="sdk\interfaces\ivengineclient.cpp" />
+    <ClCompile Include="sdk\interfaces\icvar.cpp" />
+    <ClCompile Include="sdk\classes\imaterial.cpp" />
+    <ClCompile Include="sdk\interfaces\imaterialsystem.cpp" />
+    <ClCompile Include="sdk\interfaces\imdlcache.cpp" />
+    <ClCompile Include="sdk\interfaces\ivmodelinfo.cpp" />
     <ClCompile Include="sdk\misc\constants.cpp" />
     <ClCompile Include="sdk\misc\datamap_cache.cpp" />
-    <ClCompile Include="sdk\classes\glow_object_manager.cpp" />
+    <ClCompile Include="sdk\classes\cglowobjectmanager.cpp" />
     <ClCompile Include="sdk\misc\interface_cache.cpp" />
-    <ClCompile Include="sdk\classes\client_entity_list.cpp" />
+    <ClCompile Include="sdk\interfaces\icliententitylist.cpp" />
     <ClCompile Include="sdk\misc\netvar_cache.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="config.h" />
     <ClInclude Include="features\glow.h" />
+    <ClInclude Include="features\modelchanger.h" />
     <ClInclude Include="features\nightmode.h" />
     <ClInclude Include="hooks\createmove.h" />
     <ClInclude Include="hooks\hooks.h" />
+    <ClInclude Include="sdk\classes\cbaseclientstate.h" />
     <ClInclude Include="sdk\classes\c_baseanimating.h" />
     <ClInclude Include="sdk\classes\c_basecombatweapon.h" />
     <ClInclude Include="sdk\classes\c_baseentity.h" />
-    <ClInclude Include="sdk\classes\client.h" />
+    <ClInclude Include="sdk\interfaces\chlclient.h" />
     <ClInclude Include="sdk\classes\c_econentity.h" />
     <ClInclude Include="sdk\classes\c_weaponcsbase.h" />
     <ClInclude Include="sdk\classes\icliententity.h" />
-    <ClInclude Include="sdk\classes\client_entity_list.h" />
+    <ClInclude Include="sdk\interfaces\icliententitylist.h" />
     <ClInclude Include="sdk\classes\iclientnetworkable.h" />
     <ClInclude Include="sdk\classes\iclientrenderable.h" />
     <ClInclude Include="sdk\classes\c_baseanimatingoverlay.h" />
@@ -202,18 +209,18 @@
     <ClInclude Include="sdk\classes\c_baseflex.h" />
     <ClInclude Include="sdk\classes\c_baseplayer.h" />
     <ClInclude Include="sdk\classes\c_csplayer.h" />
-    <ClInclude Include="sdk\classes\engine_client.h" />
-    <ClInclude Include="sdk\classes\defines.h" />
-    <ClInclude Include="sdk\classes\engine_cvar.h" />
-    <ClInclude Include="sdk\classes\engine_trace.h" />
-    <ClInclude Include="sdk\classes\glow_object_manager.h" />
-    <ClInclude Include="sdk\classes\material.h" />
-    <ClInclude Include="sdk\classes\material_system.h" />
-    <ClInclude Include="sdk\classes\mdl_cache.h" />
-    <ClInclude Include="sdk\classes\model_info.h" />
+    <ClInclude Include="sdk\classes\imodelloader.h" />
+    <ClInclude Include="sdk\interfaces\ivengineclient.h" />
+    <ClInclude Include="sdk\common.h" />
+    <ClInclude Include="sdk\interfaces\icvar.h" />
+    <ClInclude Include="sdk\interfaces\ienginetrace.h" />
+    <ClInclude Include="sdk\classes\cglowobjectmanager.h" />
+    <ClInclude Include="sdk\classes\imaterial.h" />
+    <ClInclude Include="sdk\interfaces\imaterialsystem.h" />
+    <ClInclude Include="sdk\interfaces\imdlcache.h" />
+    <ClInclude Include="sdk\interfaces\ivmodelinfo.h" />
     <ClInclude Include="sdk\classes\studio.h" />
     <ClInclude Include="sdk\misc\datamap_cache.h" />
-    <ClInclude Include="sdk\misc\interface_base.h" />
     <ClInclude Include="sdk\misc\interface_cache.h" />
     <ClInclude Include="sdk\misc\constants.h" />
     <ClInclude Include="sdk\misc\netvar_cache.h" />

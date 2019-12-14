@@ -13,10 +13,10 @@ namespace sdk {
 		uint32_t get_csplayer_addr() const { return this->m_csplayer_addr; }
 
 	public:
-		mango::ReadWriteVariable<bool> m_bGunGameImmunity;
-		mango::ReadWriteVariable<mango::Vec3f> m_angEyeAngles;
-		mango::ReadWriteVariable<float> m_flFlashDuration;
-		mango::ReadWriteVariable<int> m_iGlowIndex;
+		mango::RWVariable<bool> m_bGunGameImmunity;
+		mango::RWVariable<mango::Vec3f> m_angEyeAngles;
+		mango::RWVariable<float> m_flFlashDuration;
+		mango::RWVariable<int> m_iGlowIndex;
 
 	private:
 		uint32_t m_csplayer_addr = 0;

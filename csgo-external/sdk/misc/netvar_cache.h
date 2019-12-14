@@ -7,6 +7,7 @@
 #include <functional>
 
 #include <epic/process.h>
+#include <misc/fnv_hash.h>
 
 
 namespace sdk {
@@ -17,7 +18,7 @@ namespace sdk {
 		// cache netvars for later use
 		void cache(std::optional<std::reference_wrapper<std::ostream>> stream = {});
 
-		// get a netvar by table and prop name hash: fnv1a("table:prop")
+		// get a netvar by table and prop name hash: Fnv1a("table:prop")
 		uint32_t get(const uint64_t hash) const;
 
 		// forces hash to be compile time constant

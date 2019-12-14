@@ -16,7 +16,7 @@ namespace features::nightmode {
 
 			const auto material = interfaces::material_system.get_material(handle);
 
-			// night mode
+			// modulate the world
 			if (material.get_texture_group_name() == enc_str("World textures"))
 				material.color_modulate(color);
 		}

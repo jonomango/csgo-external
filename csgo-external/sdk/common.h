@@ -7,14 +7,29 @@
 
 
 namespace sdk {
-	using MDLHandle = unsigned short;
+	using MDLHandle_t = uint16_t;
+	using MaterialHandle_t = uint16_t;
+	using DataCacheHandle_t = uint32_t;
+
+	static constexpr auto MDLHANDLE_INVALID = MDLHandle_t(~0);
 
 	struct CUtlVector {
-		uint32_t m_pData;
+		uint32_t m_pData;			// pointer to an array of elements
+		int m_iAllocated;			// size of the allocated array
 	private:
-		uint8_t _padding[0x8];
+		uint8_t _padding[0x4];
 	public:
-		int m_iSize;
+		int m_iSize;				// m_iSize is always < than m_iAllocated
+		uint32_t m_pDataCopy;		// not sure what purpose this serves
+	};
+
+	struct CUtlMap {
+		uint32_t m_pData;
+		int16_t m_iAllocated;
+	private:
+		uint8_t _padding[0xC];
+	public:
+		int16_t m_iSize;
 	};
 
 	// https://github.com/ValveSoftware/source-sdk-2013/blob/master/mp/src/public/dt_common.h#L111
@@ -76,6 +91,14 @@ namespace sdk {
 		uint32_t m_name;
 		uint32_t m_help;
 		int m_flags;
+	};
+
+	struct ConCommand : public ConCommandBase {
+		uint32_t m_command_callback;
+		uint32_t m_completion_callback;
+		bool m_has_completion_callback : 1;
+		bool m_using_new_command_callback : 1;
+		bool m_using_command_callback_interface : 1;
 	};
 
 	struct ConVar : public ConCommandBase {
@@ -271,19 +294,33 @@ namespace sdk {
 		mod_studio
 	};
 
-	// couldn't find much about this, mostly used reclass
-	class model_t {
+	// https://github.com/VSES/SourceEngine2007/blob/master/se2007/engine/gl_model_private.h#L360
+	struct model_t {
+		uint32_t fnHandle;		// FileNameHandle_t
+		char szName[260];		// MAX_QPATH
+		int nLoadFlags;			// mark loaded/not loaded
+		int nServerCount;		// marked at load
+		modtype_t type;
 	private:
-		char pad_0x0000[0x4]; //0x0000
+		char pad_0x0114[0x24];
 	public:
-		char name[260]; //0x12D5888
+		MDLHandle_t studio;
+	};
+
+	// https://github.com/ValveSoftware/source-sdk-2013/blob/master/mp/src/game/client/animationlayer.h#L18
+	struct C_AnimationLayer {
 	private:
-		char pad_0x0108[0x8]; //0x0108
+		uint8_t m_padding_0[0x14];
 	public:
-		modtype_t modtype; //0x0110
+		int m_nOrder;
+		int m_nSequence;
+		float m_flPrevCycle;
+		float m_flWeight;
+		float m_flWeightDeltaRate;
+		float m_flPlaybackRate;
+		float m_flCycle;
+		uint32_t m_pEntity;
 	private:
-		char pad_0x0114[0x24]; //0x0114
-	public:
-		MDLHandle mdl_handle; //0x0138 
+		uint8_t m_padding_1[0x4];
 	};
 } // namespace sdk

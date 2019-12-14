@@ -13,7 +13,7 @@ namespace sdk {
 		uint32_t get_base_animating_addr() const { return this->m_base_animating_addr; }
 
 	public:
-		mango::ReadWriteVariable<BoneAccessor> m_BoneAccessor;
+		mango::RWVariable<BoneAccessor> m_BoneAccessor;
 
 	private:
 		uint32_t m_base_animating_addr = 0;

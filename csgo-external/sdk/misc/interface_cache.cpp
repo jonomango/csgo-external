@@ -20,7 +20,7 @@ namespace sdk {
 			this->cache_interfaces(name);
 	}
 
-	// get an interface: InterfaceCache::get(InterfaceID(fnv1a<uint64_t>("ModuleName:InterfaceName"), OptionalVersionNum))
+	// get an interface: InterfaceCache::get(InterfaceID(Fnv1a<uint64_t>("ModuleName:InterfaceName"), OptionalVersionNum))
 	uint32_t InterfaceCache::get(const InterfaceID interface_id) const {
 		// look for the interface
 		for (const auto& [id, addr] : this->m_interfaces) {
@@ -84,6 +84,6 @@ namespace sdk {
 		const auto name = str.substr(0, str.size() - 3);
 		const auto version = atoi(str.substr(str.size() - 3).c_str());
 
-		return InterfaceID(mango::fnv1a<uint64_t>(name.c_str()), version);
+		return InterfaceID(mango::Fnv1a<uint64_t>(name.c_str()), version);
 	}
 } // namespace sdk
