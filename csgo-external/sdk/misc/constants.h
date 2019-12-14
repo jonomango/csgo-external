@@ -82,6 +82,7 @@ namespace sdk {
 		inline uint32_t m_vecViewOffset;
 		inline uint32_t m_nModelIndex;
 		inline uint32_t m_hMyWeapons;
+		inline uint32_t m_nSequence;
 
 		// datamap fields
 		inline uint32_t pl; // https://github.com/ValveSoftware/source-sdk-2013/blob/master/mp/src/public/PlayerState.h

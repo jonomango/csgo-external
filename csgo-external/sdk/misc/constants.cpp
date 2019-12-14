@@ -119,6 +119,7 @@ namespace sdk {
 
 		// C_BaseAnimating
 		offsets::m_BoneAccessor = netvar_cache.get<Fnv1a<uint64_t>("DT_BaseAnimating:m_nForceBone")>() + 0x18;
+		offsets::m_nSequence = netvar_cache.get<Fnv1a<uint64_t>("DT_BaseAnimating:m_nSequence")>();
 
 		// C_BaseEntity
 		offsets::m_bSpotted = netvar_cache.get<Fnv1a<uint64_t>("DT_BaseEntity:m_bSpotted")>();

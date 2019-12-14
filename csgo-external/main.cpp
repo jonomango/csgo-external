@@ -105,29 +105,66 @@ void run_cheat() {
 		features::nightmode::modulate(config::misc::nightmode_color);
 
 		// custom models
-		features::modelchanger::update_player(config::models::player);
-		features::modelchanger::update_knife(config::models::knife);
-		globals::client_state.force_full_update();
-		std::this_thread::sleep_for(std::chrono::milliseconds(100));
+		//features::modelchanger::update_player(config::models::player);
+		//features::modelchanger::update_knife(config::models::knife);
+		//globals::client_state.force_full_update();
+		//std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+		{
+			// get localplayer
+			const auto local_player = interfaces::client_entity_list.get_local_player();
+			const auto weapon = interfaces::client_entity_list.get_client_entity<C_WeaponCSBase>(local_player.m_hActiveWeapon() & 0xFFF);
+			const auto sequence_num = globals::process.read<int>(weapon.get_weaponcs_base_addr() + 0x28BC);
+			// m_nSequence 0x28BC
+
+			// print every activity for localplayer
+			if (const auto model = weapon.get_model()) {
+				if (const auto studiohdr = interfaces::model_info.get_studio_hdr(model)) {
+					if (const auto seqdesc = studiohdr_t::get_sequence_desc(studiohdr, sequence_num)) {
+						const auto sequence = seqdesc();
+
+						char actname[128];
+						globals::process.read(uint32_t(&seqdesc) + sequence.szactivitynameindex, actname, 128);
+						actname[127] = '\0';
+
+						mango::logger.info(actname, ": ", sequence.activity, ", ", sequence.actweight);
+					}
+				}
+			}
+		}
 
 		// we're in game, lets do some shib
 		while (interfaces::engine_client.is_in_game()) {
 			if (GetAsyncKeyState(VK_INSERT))
 				return;
 
-			const auto c = offsetof(studiohdr_t, studiohdr2index);
-
 			// get localplayer
 			const auto local_player = interfaces::client_entity_list.get_local_player();
-
 			const auto weapon = interfaces::client_entity_list.get_client_entity<C_WeaponCSBase>(local_player.m_hActiveWeapon() & 0xFFF);
-			if (const auto studiohdr = interfaces::model_info.get_studio_hdr(weapon.get_model())) {
-				if (const auto virtualmodel = interfaces::model_info.get_virtual_model(studiohdr)) {
-					if (const auto seqdesc = studiohdr().get_local_sequence_desc(&studiohdr, 0)) {
-						mango::logger.info(studiohdr().name, " ", std::hex, &studiohdr, " ", &virtualmodel, " ", &seqdesc);
+
+			// print every activity for localplayer
+			if (const auto model = local_player.get_model()) {
+				if (const auto studiohdr = interfaces::model_info.get_studio_hdr(model)) {
+					if (const auto seqdesc = studiohdr_t::get_sequence_desc(studiohdr, local_player.m_nSequence())) {
+						const auto sequence = seqdesc();
+
+						// label
+						char labelname[128];
+						globals::process.read(uint32_t(&seqdesc) + sequence.szlabelindex, labelname, 128);
+						labelname[127] = '\0';
+
+						// activity name
+						char activityname[128];
+						globals::process.read(uint32_t(&seqdesc) + sequence.szactivitynameindex, activityname, 128);
+						activityname[127] = '\0';
+
+						mango::logger.info("Sequence: ", weapon.m_nSequence(), ", Activity: ", activityname, ", Label: ", labelname, ", Weight: ", sequence.actweight);
 					}
 				}
 			}
+
+			// virtualmodel_t::CUtlVector::m_iSize
+			//const auto c = offsetof(virtualmodel_t, m_seq) + offsetof(CUtlVector, m_iSize);
 
 			//mango::logger.info(globals::process.read<int>(weapon.get_weaponcs_base_addr() + 0x28BC));
 			//globals::process.write<int>(weapon.get_weaponcs_base_addr() + 0x28BC, 2);

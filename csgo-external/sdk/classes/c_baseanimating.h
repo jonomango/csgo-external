@@ -14,6 +14,7 @@ namespace sdk {
 
 	public:
 		mango::RWVariable<BoneAccessor> m_BoneAccessor;
+		mango::RWVariable<int> m_nSequence;
 
 	private:
 		uint32_t m_base_animating_addr = 0;

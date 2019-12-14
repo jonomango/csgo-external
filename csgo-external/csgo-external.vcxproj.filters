@@ -108,6 +108,9 @@
     <ClCompile Include="sdk\interfaces\chlclient.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="sdk\classes\studio.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="sdk\misc\constants.h">

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "c_baseanimating.h"
+#include "../common.h"
 
 
 namespace sdk {
@@ -14,7 +15,7 @@ namespace sdk {
 		uint32_t get_base_animating_overlay_addr() const { return this->m_base_animating_overlay_addr; }
 
 	public:
-		mango::RWVariable<CUtlVector> m_AnimOverlay;
+		mango::RWVariable<CUtlVector<C_AnimationLayer>> m_AnimOverlay;
 
 	private:
 		uint32_t m_base_animating_overlay_addr = 0;

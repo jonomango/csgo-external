@@ -3,40 +3,12 @@
 #include "../common.h"
 
 #include <misc/vector.h>
-#include <epic/process.h>
 #include <epic/read_write_variable.h>
 
 
 // https://github.com/ValveSoftware/source-sdk-2013/blob/master/mp/src/public/studio.h
 namespace sdk {
-	// HACK HACK
-	namespace globals {
-		extern mango::Process process;
-	}
-
-	struct mstudiobbox_t {
-		int				bone;
-		int				group;
-		mango::Vec3f	bbmin;
-		mango::Vec3f	bbmax;
-		int				szhitboxnameindex;
-		int				m_iPad01[3];
-		float			m_flRadius;
-		int				m_iPad02[4];
-	};
-
-	struct mstudiohitboxset_t {
-		// returns a mstudiobbox_t*
-		mango::RWVariable<mstudiobbox_t> get_hitbox(const uint32_t address, const int i) const {
-			return { globals::process, address + hitboxindex + (i * sizeof(mstudiobbox_t)) };
-		}
-
-		int				sznameindex;
-		int				numhitboxes;
-		int				hitboxindex;
-	};
-
-	// sequence descriptions
+	// describes a sequence
 	struct mstudioseqdesc_t {
 		int					baseptr;
 		int					szlabelindex;
@@ -56,7 +28,7 @@ namespace sdk {
 		float				paramstart[2];	// local (0..1) starting value
 		float				paramend[2];	// local (0..1) ending value
 		int					paramparent;
-		float				fadeintime;		// ideal cross fate in time (0.2 default)
+		float				fadeintime;		// ideal cross fade in time (0.2 default)
 		float				fadeouttime;	// ideal cross fade out time (0.2 default)
 		int					localentrynode;		// transition node at entry
 		int					localexitnode;		// transition node at exit
@@ -81,17 +53,45 @@ namespace sdk {
 		int					unused[5];		// remove/add as appropriate (grow back to 8 ints on version change!)
 	};
 
-	struct studiohdr_t {
+	// describes a hitbox
+	struct mstudiobbox_t {
+		int				bone;
+		int				group;
+		mango::Vec3f	bbmin;
+		mango::Vec3f	bbmax;
+		int				szhitboxnameindex;
+		int				m_iPad01[3];
+		float			m_flRadius;
+		int				m_iPad02[4];
+	};
+
+	class mstudiohitboxset_t {
+	public:
+		// returns a mstudiobbox_t*
+		static mango::RWVariable<mstudiobbox_t> get_hitbox(const mango::RWVariable<mstudiohitboxset_t> boxset, const int i);
+
+	public:
+		int				sznameindex;
+		int				numhitboxes;
+		int				hitboxindex;
+	};
+
+	// the main model structure
+	class studiohdr_t {
+	public:
 		// returns a mstudiohitboxset_t*
-		mango::RWVariable<mstudiohitboxset_t> get_hitbox_set(const uint32_t address, const int i) const {
-			return { globals::process, address + hitboxsetindex + (i * sizeof(mstudiohitboxset_t)) };
-		}
+		static mango::RWVariable<mstudiohitboxset_t> get_hitbox_set(const mango::RWVariable<studiohdr_t> studiohdr, const int i);
 
 		// returns a mstudioseqdesc_t*
-		mango::RWVariable<mstudioseqdesc_t> get_local_sequence_desc(const uint32_t address, const int i) const {
-			return { globals::process, address + localseqindex + (i * sizeof(mstudioseqdesc_t)) };
-		}
+		static mango::RWVariable<mstudioseqdesc_t> get_local_sequence_desc(const mango::RWVariable<studiohdr_t> studiohdr, const int i);
 
+		// returns a mstudioseqdesc_t*
+		static mango::RWVariable<mstudioseqdesc_t> get_sequence_desc(const mango::RWVariable<studiohdr_t> studiohdr, const int i);
+
+		// how many available sequences
+		static int get_num_sequences(const mango::RWVariable<studiohdr_t> studiohdr);
+
+	public:
 		int             id;
 		int             version;
 		int             checksum;
@@ -180,18 +180,41 @@ namespace sdk {
 		MDLHandle_t m_VirtualModelMDL;
 	};
 
+	struct virtualgroup_t {
+		MDLHandle_t cache;
+		CUtlVector<int> boneMap;				// maps global bone to local bone
+		CUtlVector<int> masterBone;				// maps local bone to global bone
+		CUtlVector<int> masterSeq;				// maps local sequence to master sequence
+		CUtlVector<int> masterAnim;				// maps local animation to master animation
+		CUtlVector<int> masterAttachment;		// maps local attachment to global
+		CUtlVector<int> masterPose;				// maps local pose parameter to global
+		CUtlVector<int> masterNode;				// maps local transition nodes to global
+	};
+
+	struct virtualgeneric_t {
+		int group;
+		int index;
+	};
+
+	struct virtualsequence_t {
+		int	flags;
+		int activity;
+		int group;
+		int index;
+	};
+
 	struct virtualmodel_t {
 	private:
 		uint8_t pad_0x0000[0x8];
 	public:
-		CUtlVector m_seq; // virtualsequence_t
-		CUtlVector m_anim; // virtualgeneric_t 
-		CUtlVector m_attachment; // virtualgeneric_t 
-		CUtlVector m_pose; // virtualgeneric_t 
-		CUtlVector m_group; // virtualgroup_t 
-		CUtlVector m_node; // virtualgeneric_t 
-		CUtlVector m_iklock; // virtualgeneric_t 
-		CUtlVector m_autoplaySequences; // unsigned short
+		CUtlVector<virtualsequence_t>	m_seq;
+		CUtlVector<virtualgeneric_t>	m_anim;
+		CUtlVector<virtualgeneric_t>	m_attachment;
+		CUtlVector<virtualgeneric_t>	m_pose;
+		CUtlVector<virtualgroup_t>		m_group;
+		CUtlVector<virtualgeneric_t>	m_node;
+		CUtlVector<virtualgeneric_t>	m_iklock;
+		CUtlVector<uint16_t>			m_autoplaySequences;
 	private:
 		uint8_t pad_0x00A8[0xC];
 	};

@@ -8,14 +8,13 @@ namespace features::glow {
 		using namespace sdk;
 
 		// get the address of the glow object
-		const auto glow_object_addr = sizeof(GlowObject) * player.m_iGlowIndex() +
-			globals::glow_object_manager.m_GlowObjectDefinitions().m_pData;
+		const auto glow_object = globals::glow_object_manager.m_GlowObjectDefinitions()[player.m_iGlowIndex()];
 
-		auto glow_object = globals::process.read<GlowObject>(glow_object_addr);
-		glow_object.m_render_when_occluded = true;
-		glow_object.m_glow_color = color;
+		auto new_glow_object = glow_object();
+		new_glow_object.m_render_when_occluded = true;
+		new_glow_object.m_glow_color = color;
 
 		// overwrite the glow object with our changed object
-		globals::process.write<GlowObject>(glow_object_addr, glow_object);
+		glow_object = new_glow_object;
 	}
 } // namespace features::glow

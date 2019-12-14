@@ -2,18 +2,31 @@
 
 #include <stdint.h>
 
+#include <epic/read_write_variable.h>
+#include <epic/process.h>
 #include <misc/color.h>
 #include <misc/vector.h>
 
 
 namespace sdk {
+	// HACK HACK
+	namespace globals {
+		extern mango::Process process;
+	}
+
 	using MDLHandle_t = uint16_t;
 	using MaterialHandle_t = uint16_t;
 	using DataCacheHandle_t = uint32_t;
 
 	static constexpr auto MDLHANDLE_INVALID = MDLHandle_t(~0);
 
-	struct CUtlVector {
+	template <typename T>
+	class CUtlVector {
+	public:
+		mango::RWVariable<T> operator[](const size_t index) const noexcept {
+			return { globals::process, this->m_pData + index * sizeof(T) };
+		}
+	public:
 		uint32_t m_pData;			// pointer to an array of elements
 		int m_iAllocated;			// size of the allocated array
 	private:

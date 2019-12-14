@@ -18,7 +18,7 @@ namespace sdk {
 		operator uint32_t() const noexcept { return this->m_address; }
 
 	public:
-		mango::RWVariable<CUtlVector> m_GlowObjectDefinitions;
+		mango::RWVariable<CUtlVector<GlowObject>> m_GlowObjectDefinitions;
 
 	private:
 		uint32_t m_address = 0;
