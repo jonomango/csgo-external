@@ -86,7 +86,7 @@ namespace sdk {
 	IMaterial IMaterialSystem::find_material(const std::string_view name, const std::optional<std::string_view> group_name) const {
 		for (auto handle = this->first_material(); handle != this->invalid_material(); handle = this->next_material(handle)) {
 			const auto material = this->get_material(handle);
-			if (!material)
+			if (!material.imaterial())
 				continue;
 
 			// this part is optional

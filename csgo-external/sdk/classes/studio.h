@@ -8,6 +8,15 @@
 
 // https://github.com/ValveSoftware/source-sdk-2013/blob/master/mp/src/public/studio.h
 namespace sdk {
+	// events
+	struct mstudioevent_t {
+		float		cycle;
+		int			event;
+		int			type;
+		char		options[64];
+		int			szeventindex;
+	};
+
 	// describes a sequence
 	struct mstudioseqdesc_t {
 		int					baseptr;
@@ -236,5 +245,10 @@ namespace sdk {
 		uint32_t m_pUserData; // studiohdr_t*
 	private:
 		uint8_t pad_0x008C[0x18];
+	};
+
+	struct CStudioHdr {
+		uint32_t m_pStudioHdr; // studiohdr_t*
+		uint32_t m_pVModel; // virtualmodel_t*
 	};
 } // namespace sdk

@@ -18,7 +18,8 @@ namespace hooks {
 	void hook_createmove() {
 		using namespace sdk;
 
-		const auto orig_create_move = mango::get_vfunc<uint32_t>(globals::process, globals::client_mode, indices::create_move);
+		const auto orig_create_move = mango::get_vfunc<uint32_t>(globals::process, 
+			globals::client_mode.iclientmode(), indices::create_move);
 		const auto con_msg = globals::process.get_proc_addr(enc_str("tier0.dll"), enc_str("?ConMsg@@YAXPBDZZ"));
 
 		const std::string vector_str("vector: [%f, %f, %f]\n");
@@ -483,7 +484,7 @@ namespace hooks {
 			"\x8D\x45\xE8",							// lea eax, [ebp - 0x18]
 			"\x50",									// push eax
 			"\xB9", uint32_t(						// mov ecx, engine_client
-				interfaces::engine_client),
+				interfaces::engine_client.ivengineclient()),
 			"\x8B\x01",								// mov eax, [ecx]
 			"\xFF\x90", uint32_t(					// call [eax + (get_view_angles offset)]
 				indices::get_view_angles * 4),
@@ -586,7 +587,7 @@ namespace hooks {
 			// get the studiohdr_t*
 			"\x50",									// push eax (model_t*)
 			"\xB9", uint32_t(						// mov ecx, model_info
-				interfaces::model_info),
+				interfaces::model_info.ivmodelinfo()),
 			"\x8B\x01",								// mov eax, [ecx]
 			"\xFF\x90", uint32_t(					// call [eax + (get_studio_hdr offset)]
 				indices::get_studio_hdr * 4),
@@ -777,7 +778,7 @@ namespace hooks {
 			"\x83\xE0\xF0",							// and eax, 0xFFFF'FFF0 (-16)
 			"\x50",									// push eax (ray)
 			"\xB9", uint32_t(						// mov ecx, engine_trace
-				interfaces::engine_trace),
+				interfaces::engine_trace.ienginetrace()),
 			"\x8B\x01",								// mov eax, [ecx]
 			"\xFF\x90", uint32_t(					// call [eax + (trace_ray offset)]
 				indices::trace_ray * 4),
@@ -910,7 +911,7 @@ namespace hooks {
 			"\x81\xE3\xFF\x0F\x00\x00",				// and ebx, 0xFFF
 			"\x53",									// push ebx
 			"\xB9", uint32_t(						// mov ecx, client_entity_list
-				interfaces::client_entity_list),
+				interfaces::client_entity_list.icliententitylist()),
 			"\x8B\x01",								// mov eax, [ecx]
 			"\xFF\x90", uint32_t(					// call [eax + (get_client_entity offset)]
 				indices::get_client_entity * 4),
@@ -918,7 +919,7 @@ namespace hooks {
 
 			// xmm0 = interval_per_tick
 			"\xF3\x0F\x10\x05", uint32_t(			// movss xmm0, interval_per_tick
-				globals::global_vars_base + offsetof(GlobalVarsBase, interval_per_tick)),
+				&globals::global_vars_base + offsetof(CGlobalVarsBase, interval_per_tick)),
 
 			// xmm1 = localplayer->m_nTickbase
 			"\x8B\x5D\x08",							// mov ebx, [ebp + 0x08] (localplayer)
@@ -969,7 +970,7 @@ namespace hooks {
 			// get the entity address
 			"\x51",									// push ecx (entity index)
 			"\xB9", uint32_t(						// mov ecx, client_entity_list
-				interfaces::client_entity_list),
+				interfaces::client_entity_list.icliententitylist()),
 			"\x8B\x01",								// mov eax, [ecx]
 			"\xFF\x50", uint8_t(					// call [eax + (get_client_entity offset)]
 				indices::get_client_entity * sizeof(uint32_t)),
@@ -1166,7 +1167,7 @@ namespace hooks {
 			"\x8D\x45\xF4",							// lea eax, [ebp - 0x0C]
 			"\x50",									// push eax
 			"\xB9", uint32_t(						// mov ecx, engine_client
-				interfaces::engine_client),
+				interfaces::engine_client.ivengineclient()),
 			"\x8B\x01",								// mov eax, [ecx]
 			"\xFF\x90", uint32_t(					// call [eax + (get_view_angles offset)]
 				indices::get_view_angles * 4),
@@ -1250,7 +1251,7 @@ namespace hooks {
 
 			// get the localplayer index
 			"\xB9", uint32_t(						// mov ecx, engine_client
-				interfaces::engine_client),
+				interfaces::engine_client.ivengineclient()),
 			"\x8B\x01",								// mov eax, [ecx]
 			"\xFF\x50", uint8_t(					// call [eax + get_local_player offset]
 				indices::get_local_player * 4),
@@ -1258,7 +1259,7 @@ namespace hooks {
 			// get the localplayer
 			"\x50",									// push eax (localplayer index)
 			"\xB9", uint32_t(						// mov ecx, client_entity_list
-				interfaces::client_entity_list),
+				interfaces::client_entity_list.icliententitylist()),
 			"\x8B\x01",								// mov eax, [ecx]
 			"\xFF\x50", uint8_t(					// call [eax + (get_client_entity offset)]
 				indices::get_client_entity * sizeof(uint32_t)),

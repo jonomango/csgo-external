@@ -15,7 +15,7 @@ namespace sdk {
 		explicit IModelLoader(const uint32_t address) noexcept;
 
 		// get the underlying address
-		uint32_t get_model_loader_addr() const { return this->m_model_loader_addr; }
+		uint32_t imodelloader() const noexcept { return this->m_address; }
 
 	public:
 		mango::RWVariable<CUtlMap> m_Models;
@@ -30,6 +30,6 @@ namespace sdk {
 		mango::RWVariable<model_t> get_model_for_name(const std::string_view name) const;
 
 	private:
-		uint32_t m_model_loader_addr = 0;
+		uint32_t m_address = 0;
 	};
 } // namespace sdk

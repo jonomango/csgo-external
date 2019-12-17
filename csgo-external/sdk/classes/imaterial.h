@@ -15,7 +15,7 @@ namespace sdk {
 		explicit IMaterial(const uint32_t address) noexcept : m_address(address) {}
 
 		// get the underlying address
-		operator uint32_t() const noexcept { return this->m_address; }
+		uint32_t imaterial() const noexcept { return this->m_address; }
 
 	public:
 		// https://github.com/ValveSoftware/source-sdk-2013/blob/master/mp/src/public/materialsystem/imaterial.h#L452

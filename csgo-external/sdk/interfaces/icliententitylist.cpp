@@ -11,9 +11,8 @@ namespace sdk {
 	}
 
 	// https://github.com/ValveSoftware/source-sdk-2013/blob/master/mp/src/public/icliententitylist.h#L38
-	uint32_t IClientEntityList::get_client_entity_imp(int index) const {
-		index += 0xFFFF'DFFF;
-		const auto address = interfaces::client_entity_list + (index + index) * 0x8;
+	uint32_t IClientEntityList::get_client_entity_imp(const int index) const {
+		const auto address = this->m_address + (index + 0xFFFF'DFFF) * 0x10;
 		return globals::process.read<uint32_t>(address);
 	}
 } // namespace sdk

@@ -4,7 +4,7 @@
 
 
 namespace sdk {
-	IModelLoader::IModelLoader(const uint32_t address) noexcept : m_model_loader_addr(address) {
+	IModelLoader::IModelLoader(const uint32_t address) noexcept : m_address(address) {
 		this->m_Models.setup(globals::process, address + 0x08);
 	}
 

@@ -12,12 +12,12 @@ namespace sdk {
 		explicit C_BaseAnimatingOverlay(const uint32_t address) noexcept;
 
 		// get the underlying address
-		uint32_t get_base_animating_overlay_addr() const { return this->m_base_animating_overlay_addr; }
+		uint32_t cbaseanimatingoverlay() const noexcept { return this->m_address; }
 
 	public:
 		mango::RWVariable<CUtlVector<C_AnimationLayer>> m_AnimOverlay;
 
 	private:
-		uint32_t m_base_animating_overlay_addr = 0;
+		uint32_t m_address = 0;
 	};
 } // namespace sdk

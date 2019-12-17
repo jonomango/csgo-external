@@ -28,18 +28,16 @@ namespace features::modelchanger {
 
 		// get localplayer
 		const auto localplayer = interfaces::client_entity_list.get_local_player();
-		if (!localplayer.get_csplayer_addr())
+		if (!localplayer.ccsplayer())
 			return;
 
 		// find our knife model
 		const auto weapons = localplayer.m_hMyWeapons();
 		for (size_t i = 0; i < 64; ++i) {
-			const auto handle = weapons[i];
-			if (handle == 0xFFFF'FFFF)
+			const auto weapon = interfaces::client_entity_list.get_client_entity_from_handle<C_WeaponCSBase>(weapons[i]);
+			if (!weapon.cweaponcsbase())
 				break;
 
-			const auto weapon = interfaces::client_entity_list.get_client_entity<
-				C_WeaponCSBase>(handle & 0xFFF);
 			const auto model = weapon.get_model();
 			if (!model)
 				continue;
@@ -56,11 +54,6 @@ namespace features::modelchanger {
 			// override our model's mdl_handle with our desired model's mdl handle
 			globals::process.write<MDLHandle_t>(uint32_t(&model) +
 				offsetof(model_t, studio), new_model().studio);
-
-			// m_iViewModelIndex
-			//globals::process.write<uint32_t>(weapon.get_client_renderable_addr() + 0x68, 0);
-			//mango::logger.info(globals::process.read<int>(weapon.get_weaponcs_base_addr() + 0x29C4));
-			//globals::process.write<int>(weapon.get_weaponcs_base_addr() + 0x3220, 477);
 
 			// you can't have two knives dummy
 			break;

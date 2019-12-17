@@ -1,6 +1,9 @@
 #pragma once
 
 #include "c_baseentity.h"
+#include "studio.h"
+
+#include <array>
 
 
 namespace sdk {
@@ -10,13 +13,17 @@ namespace sdk {
 		explicit C_BaseAnimating(const uint32_t address) noexcept;
 
 		// get the underlying address
-		uint32_t get_base_animating_addr() const { return this->m_base_animating_addr; }
+		uint32_t cbaseanimating() const noexcept { return this->m_address; }
 
 	public:
-		mango::RWVariable<BoneAccessor> m_BoneAccessor;
 		mango::RWVariable<int> m_nSequence;
+		mango::RWVariable<BoneAccessor> m_BoneAccessor;
+		mango::RWVariable<std::array<float, 24>> m_flPoseParameter;
+
+		// https://github.com/FWGS/source-sdk-2013-tegra/blob/master/sp/src/game/client/c_baseanimating.h#L174
+		mango::RWVariable<CStudioHdr> get_model_ptr() const;
 
 	private:
-		uint32_t m_base_animating_addr = 0;
+		uint32_t m_address = 0;
 	};
 } // namespace mango

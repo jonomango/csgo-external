@@ -4,7 +4,7 @@
 
 
 namespace sdk {
-	CBaseClientState::CBaseClientState(const uint32_t address) noexcept : m_base_client_state(address) {
+	CBaseClientState::CBaseClientState(const uint32_t address) noexcept : m_address(address) {
 		this->m_nSignonState.setup(globals::process, address + offsets::m_nSignonState);
 		this->m_nDeltaTick.setup(globals::process, address + offsets::m_nDeltaTick);
 		this->m_nPlayerSlot.setup(globals::process, address + offsets::m_nPlayerSlot);

@@ -8,12 +8,12 @@ namespace sdk {
 	public:
 		IClientEntity() = default;
 		explicit IClientEntity(const uint32_t address) noexcept
-			: m_client_entity_addr(address), IClientRenderable(address + 4) {}
+			: m_address(address), IClientRenderable(address + 4) {}
 
 		// get the underlying address
-		uint32_t get_client_entity_addr() const { return this->m_client_entity_addr; }
+		uint32_t icliententity() const noexcept { return this->m_address; }
 
 	private:
-		uint32_t m_client_entity_addr = 0;
+		uint32_t m_address = 0;
 	};
 } // namespace sdk

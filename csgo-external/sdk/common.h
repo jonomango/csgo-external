@@ -18,7 +18,51 @@ namespace sdk {
 	using MaterialHandle_t = uint16_t;
 	using DataCacheHandle_t = uint32_t;
 
+	// How many bits to use to encode an edict.
+	static constexpr auto MAX_EDICT_BITS = 11; // # of bits needed to represent max edicts
+	static constexpr auto MAX_EDICTS = (1 << MAX_EDICT_BITS);
+
+	// Used for networking ehandles.
+	static constexpr auto NUM_ENT_ENTRY_BITS = (MAX_EDICT_BITS + 1);
+	static constexpr auto NUM_ENT_ENTRIES = (1 << NUM_ENT_ENTRY_BITS);
+	static constexpr auto ENT_ENTRY_MASK = (NUM_ENT_ENTRIES - 1);
+	static constexpr auto INVALID_EHANDLE_INDEX = 0xFFFFFFFF;
+
+	static constexpr auto NUM_SERIAL_NUM_BITS = (32 - NUM_ENT_ENTRY_BITS);
 	static constexpr auto MDLHANDLE_INVALID = MDLHandle_t(~0);
+
+	// https://github.com/ValveSoftware/source-sdk-2013/blob/master/mp/src/public/basehandle.h#L25
+	class CBaseHandle {
+	public:
+		constexpr CBaseHandle() noexcept 
+			: m_Index(INVALID_EHANDLE_INDEX) {}
+		constexpr CBaseHandle(const uint32_t value) noexcept 
+			: m_Index(value) {}
+		constexpr CBaseHandle(const CBaseHandle& other) noexcept 
+			: m_Index(other.m_Index) {}
+		constexpr CBaseHandle(const int iEntry, const int iSerialNumber) noexcept 
+			: m_Index(iEntry | (iSerialNumber << NUM_ENT_ENTRY_BITS)) {}
+
+	public:
+		bool is_valid() const noexcept {
+			return this->m_Index != INVALID_EHANDLE_INDEX;
+		}
+
+		int get_entry_index() const noexcept {
+			return m_Index & ENT_ENTRY_MASK;
+		}
+
+		int get_serial_number() const noexcept {
+			return m_Index >> NUM_ENT_ENTRY_BITS;
+		}
+
+		uint32_t get_value() const noexcept {
+			return this->m_Index;
+		}
+
+	private:
+		uint32_t m_Index;
+	};
 
 	template <typename T>
 	class CUtlVector {
@@ -204,7 +248,7 @@ namespace sdk {
 	};
 
 	// https://github.com/ValveSoftware/source-sdk-2013/blob/master/mp/src/public/globalvars_base.h
-	struct GlobalVarsBase {
+	struct CGlobalVarsBase {
 		float realtime;
 		int	framecount;
 		float absoluteframetime;

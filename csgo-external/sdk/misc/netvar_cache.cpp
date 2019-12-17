@@ -10,7 +10,7 @@ namespace sdk {
 	// cache netvars for later use
 	void NetvarCache::cache(std::optional<std::reference_wrapper<std::ostream>> stream) {
 		// iterate over all client classes
-		auto client_class_addr = interfaces::client.get_all_classes();
+		auto client_class_addr = &interfaces::client.get_all_classes();
 		while (client_class_addr) {
 			const auto client_class = globals::process.read<ClientClass>(client_class_addr);
 

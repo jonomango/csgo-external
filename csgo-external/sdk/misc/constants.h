@@ -1,7 +1,5 @@
 #pragma once
 
-#include <epic/process.h>
-
 #include "../interfaces/chlclient.h"
 #include "../interfaces/ivengineclient.h"
 #include "../interfaces/icliententitylist.h"
@@ -14,6 +12,10 @@
 #include "../classes/cglowobjectmanager.h"
 #include "../classes/imodelloader.h"
 #include "../classes/cbaseclientstate.h"
+#include "../classes/iclientmode.h"
+
+#include <epic/process.h>
+#include <epic/read_write_variable.h>
 
 
 namespace sdk {
@@ -23,25 +25,14 @@ namespace sdk {
 		inline mango::Process process;
 
 		// https://github.com/ValveSoftware/source-sdk-2013/blob/master/mp/src/public/globalvars_base.h
-		inline uint32_t global_vars_base;
-
-		// https://github.com/ValveSoftware/source-sdk-2013/blob/master/mp/src/game/client/glow_outline_effect.cpp
+		inline mango::RWVariable<CGlobalVarsBase> global_vars_base;
 		inline CGlowObjectManager glow_object_manager;
-
-		// https://github.com/VSES/SourceEngine2007/blob/master/se2007/engine/modelloader.h#L24
 		inline IModelLoader model_loader;
-
-		// https://github.com/ValveSoftware/source-sdk-2013/blob/master/sp/src/game/client/iclientmode.h
-		inline uint32_t client_mode;
-
-		// https://github.com/VSES/SourceEngine2007/blob/master/se2007/engine/baseclientstate.h
+		inline IClientMode client_mode;
 		inline CBaseClientState client_state;
 
-		// the head node to a linked list of ClientClass pointers
-		inline uint32_t client_class_head;
-
-		// not sure what this is but whatever
-		inline uint32_t material_name_related_var;
+		// not sure what this is called but whatever
+		inline uint32_t cached_strings;
 	} // namespace globals
 	namespace interfaces {
 		inline CHLClient client;
@@ -54,9 +45,6 @@ namespace sdk {
 		inline IMDLCache mdl_cache;
 	} // namespace interfaces
 	namespace offsets {
-		// https://github.com/ValveSoftware/source-sdk-2013/blob/master/mp/src/game/client/c_baseanimating.h#L518
-		inline uint32_t m_BoneAccessor;
-
 		// dynamic
 		inline uint32_t m_iGlowIndex;
 		inline uint32_t m_nPlayerSlot;
@@ -64,6 +52,8 @@ namespace sdk {
 		inline uint32_t m_vecViewAngles;
 		inline uint32_t m_nDeltaTick;
 		inline uint32_t m_AnimOverlay;
+		inline uint32_t m_pStudioHdr;
+		inline uint32_t m_BoneAccessor;
 
 		// netvars
 		inline uint32_t m_iHealth;
@@ -83,6 +73,7 @@ namespace sdk {
 		inline uint32_t m_nModelIndex;
 		inline uint32_t m_hMyWeapons;
 		inline uint32_t m_nSequence;
+		inline uint32_t m_flPoseParameter;
 
 		// datamap fields
 		inline uint32_t pl; // https://github.com/ValveSoftware/source-sdk-2013/blob/master/mp/src/public/PlayerState.h
@@ -90,54 +81,59 @@ namespace sdk {
 		inline uint32_t m_aimPunchAngle;	
 
 		// hardcoded
-		const inline uint32_t m_bDormant = 0xED; // TODO: this is unneeded... 
+		constexpr inline uint32_t m_bDormant = 0xED; // TODO: this is unneeded... 
 
 	} // namespace offsets
 	namespace indices { 
 		// VClientEntityList
-		const inline uint32_t get_client_entity = 3;
+		constexpr inline uint32_t get_client_entity = 3;
 
 		// VEngineClient
-		const inline uint32_t get_local_player = 12;
-		const inline uint32_t get_view_angles = 18;
-		const inline uint32_t is_in_game = 26;
+		constexpr inline uint32_t get_local_player = 12;
+		constexpr inline uint32_t get_view_angles = 18;
+		constexpr inline uint32_t is_in_game = 26;
 
 		// VClient 
-		const inline uint32_t init = 0;
-		const inline uint32_t get_all_classes = 8;
-		const inline uint32_t hud_process_input = 10;
+		constexpr inline uint32_t init = 0;
+		constexpr inline uint32_t get_all_classes = 8;
+		constexpr inline uint32_t hud_process_input = 10;
 
 		// IVModelInfo
-		const inline uint32_t get_studio_hdr = 32;
-		const inline uint32_t get_model_name = 3;
+		constexpr inline uint32_t get_studio_hdr = 32;
+		constexpr inline uint32_t get_model_name = 3;
 
 		// EngineTraceClient
-		const inline uint32_t trace_ray = 5;
+		constexpr inline uint32_t trace_ray = 5;
 
 		// IClientMode
-		const inline uint32_t create_move = 24;
-		const inline uint32_t do_post_screen_space_effects = 44;
+		constexpr inline uint32_t do_post_screen_space_effects = 44;
+		constexpr inline uint32_t should_draw_crosshair = 28;
+		constexpr inline uint32_t should_draw_viewModel = 27;
+		constexpr inline uint32_t should_draw_particles = 16;
+		constexpr inline uint32_t get_view_model_fov = 35;
+		constexpr inline uint32_t should_draw_fog = 17;
+		constexpr inline uint32_t create_move = 24;
 
 		// IMaterialSystem
-		const inline uint32_t get_num_materials = 90;
+		constexpr inline uint32_t get_num_materials = 90;
 
 		// IMaterial
-		const inline uint32_t get_name = 0;
-		const inline uint32_t get_texture_group_name = 1;
-		const inline uint32_t get_shader_params = 41;
+		constexpr inline uint32_t get_name = 0;
+		constexpr inline uint32_t get_texture_group_name = 1;
+		constexpr inline uint32_t get_shader_params = 41;
 
 		// IClientRenderable
-		const inline uint32_t get_model = 8;
+		constexpr inline uint32_t get_model = 8;
 
 		// IClientNetworkable
-		const inline uint32_t get_client_class = 2;
-		const inline uint32_t is_dormant = 9;
-		const inline uint32_t entindex = 10;
+		constexpr inline uint32_t get_client_class = 2;
+		constexpr inline uint32_t is_dormant = 9;
+		constexpr inline uint32_t entindex = 10;
 
 		// CBaseCombatWeapon
-		const inline uint32_t get_inaccuracy = 479;
+		constexpr inline uint32_t get_inaccuracy = 479;
 
 		// IModelLoader
-		const inline uint32_t get_count = 2;
+		constexpr inline uint32_t get_count = 2;
 	} // indices
 } // namespace sdk

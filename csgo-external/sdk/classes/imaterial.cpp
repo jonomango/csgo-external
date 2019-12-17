@@ -94,7 +94,7 @@ namespace sdk {
 		// add     eax, 0Ah
 		// add     eax, ecx
 
-		auto edi = globals::material_name_related_var;
+		auto edi = globals::cached_strings;
 		auto ecx = eax * 3;
 		eax = globals::process.read<uint32_t>(edi + 4);
 		auto edx = uint32_t(globals::process.read<uint16_t>(eax + ecx * 4 + 8));

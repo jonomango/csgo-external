@@ -12,7 +12,7 @@ namespace sdk {
 		explicit CBaseClientState(const uint32_t address) noexcept;
 
 		// get the underlying address
-		uint32_t base_client_state() const { return this->m_base_client_state; }
+		uint32_t cbaseclientstate() const noexcept { return this->m_address; }
 
 	public:
 		mango::RWVariable<int> m_nSignonState;
@@ -24,6 +24,6 @@ namespace sdk {
 		void force_full_update() const;
 
 	private:
-		uint32_t m_base_client_state = 0;
+		uint32_t m_address = 0;
 	};
 } // namespace sdk

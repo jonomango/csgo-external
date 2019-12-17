@@ -4,7 +4,7 @@
 
 
 namespace sdk {
-	C_BasePlayer::C_BasePlayer(const uint32_t address) noexcept : m_base_player_addr(address), C_BaseCombatCharacter(address) {
+	C_BasePlayer::C_BasePlayer(const uint32_t address) noexcept : m_address(address), C_BaseCombatCharacter(address) {
 		this->m_iHealth.setup(globals::process, address + offsets::m_iHealth);
 		this->m_fFlags.setup(globals::process, address + offsets::m_fFlags);
 		this->m_nTickBase.setup(globals::process, address + offsets::m_nTickBase);

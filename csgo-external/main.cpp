@@ -75,6 +75,9 @@ void setup_cheat() {
 	sdk::globals::process.setup(pids.front(), options);
 	mango::logger.success(enc_str("Process initialized: "), sdk::globals::process.get_name());
 
+	// load configuration
+	config::setup();
+
 	// gets interfaces and stuffs and shibs
 	sdk::setup_constants();
 
@@ -105,33 +108,12 @@ void run_cheat() {
 		features::nightmode::modulate(config::misc::nightmode_color);
 
 		// custom models
-		//features::modelchanger::update_player(config::models::player);
-		//features::modelchanger::update_knife(config::models::knife);
-		//globals::client_state.force_full_update();
-		//std::this_thread::sleep_for(std::chrono::milliseconds(100));
+		features::modelchanger::update_player(config::models::player);
+		features::modelchanger::update_knife(config::models::knife);
+		globals::client_state.force_full_update();
+		std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
-		{
-			// get localplayer
-			const auto local_player = interfaces::client_entity_list.get_local_player();
-			const auto weapon = interfaces::client_entity_list.get_client_entity<C_WeaponCSBase>(local_player.m_hActiveWeapon() & 0xFFF);
-			const auto sequence_num = globals::process.read<int>(weapon.get_weaponcs_base_addr() + 0x28BC);
-			// m_nSequence 0x28BC
-
-			// print every activity for localplayer
-			if (const auto model = weapon.get_model()) {
-				if (const auto studiohdr = interfaces::model_info.get_studio_hdr(model)) {
-					if (const auto seqdesc = studiohdr_t::get_sequence_desc(studiohdr, sequence_num)) {
-						const auto sequence = seqdesc();
-
-						char actname[128];
-						globals::process.read(uint32_t(&seqdesc) + sequence.szactivitynameindex, actname, 128);
-						actname[127] = '\0';
-
-						mango::logger.info(actname, ": ", sequence.activity, ", ", sequence.actweight);
-					}
-				}
-			}
-		}
+		mango::logger.info(std::hex, globals::client_mode.iclientmode());
 
 		// we're in game, lets do some shib
 		while (interfaces::engine_client.is_in_game()) {
@@ -139,52 +121,27 @@ void run_cheat() {
 				return;
 
 			// get localplayer
-			const auto local_player = interfaces::client_entity_list.get_local_player();
-			const auto weapon = interfaces::client_entity_list.get_client_entity<C_WeaponCSBase>(local_player.m_hActiveWeapon() & 0xFFF);
+			const auto localplayer = interfaces::client_entity_list.get_local_player();
 
-			// print every activity for localplayer
-			if (const auto model = local_player.get_model()) {
-				if (const auto studiohdr = interfaces::model_info.get_studio_hdr(model)) {
-					if (const auto seqdesc = studiohdr_t::get_sequence_desc(studiohdr, local_player.m_nSequence())) {
-						const auto sequence = seqdesc();
+			// shouldn't happen while in-game but whatever
+			if (!localplayer.ccsplayer())
+				continue;
 
-						// label
-						char labelname[128];
-						globals::process.read(uint32_t(&seqdesc) + sequence.szlabelindex, labelname, 128);
-						labelname[127] = '\0';
-
-						// activity name
-						char activityname[128];
-						globals::process.read(uint32_t(&seqdesc) + sequence.szactivitynameindex, activityname, 128);
-						activityname[127] = '\0';
-
-						mango::logger.info("Sequence: ", weapon.m_nSequence(), ", Activity: ", activityname, ", Label: ", labelname, ", Weight: ", sequence.actweight);
-					}
-				}
+			// stuff while we're alive...
+			if (localplayer.m_iHealth() > 0) {
+				// noflash
+				if (config::misc::noflash_enabled)
+					localplayer.m_flFlashDuration = 0.f;
 			}
-
-			// virtualmodel_t::CUtlVector::m_iSize
-			//const auto c = offsetof(virtualmodel_t, m_seq) + offsetof(CUtlVector, m_iSize);
-
-			//mango::logger.info(globals::process.read<int>(weapon.get_weaponcs_base_addr() + 0x28BC));
-			//globals::process.write<int>(weapon.get_weaponcs_base_addr() + 0x28BC, 2);
-
-			// noflash
-			if (config::misc::noflash_enabled)
-				local_player.m_flFlashDuration = 0.f;
 
 			// iterate over every player
 			for (int i = 1; i < 64; ++i) {
 				const auto player = interfaces::client_entity_list.get_client_entity<C_CSPlayer>(i);
-				if (!player.get_client_entity_addr())
-					continue;
-
-				// ignore self, dormant players, and dead players
-				if (player.get_client_entity_addr() == local_player.get_client_entity_addr() || player.is_dormant() || player.m_iHealth() <= 0)
+				if (!player.ccsplayer() || player.ccsplayer() == localplayer.ccsplayer() || player.is_dormant() || player.m_iHealth() <= 0)
 					continue;
 
 				// enemies
-				if (player.m_iTeamNum() != local_player.m_iTeamNum()) {
+				if (player.m_iTeamNum() != localplayer.m_iTeamNum()) {
 					// glow
 					if (config::glow::enemy_enabled)
 						features::glow::draw_player(player, config::glow::enemy_color);

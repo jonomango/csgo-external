@@ -9,10 +9,10 @@ namespace sdk {
 	public:
 		IClientNetworkable() = default;
 		explicit IClientNetworkable(const uint32_t address) noexcept 
-			: m_client_networkable_addr(address) {}
+			: m_address(address) {}
 
 		// get the underlying address
-		uint32_t get_client_networkable_addr() const { return this->m_client_networkable_addr; }
+		uint32_t iclientnetworkable() const noexcept { return this->m_address; }
 
 	public:
 		// https://github.com/alliedmodders/hl2sdk/blob/0ef5d3d482157bc0bb3aafd37c08961373f87bfd/public/iclientnetworkable.h#L54
@@ -25,6 +25,6 @@ namespace sdk {
 		int entindex() const;
 
 	private:
-		uint32_t m_client_networkable_addr = 0;
+		uint32_t m_address = 0;
 	};
 } // namespace sdk

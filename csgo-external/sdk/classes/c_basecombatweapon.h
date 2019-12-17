@@ -11,12 +11,12 @@ namespace sdk {
 		explicit C_BaseCombatWeapon(const uint32_t address) noexcept;
 
 		// get the underlying address
-		uint32_t get_base_combat_weapon_addr() const { return this->m_base_combat_weapon_addr; }
+		uint32_t cbasecombatweapon() const noexcept { return this->m_address; }
 
 	public:
 		mango::RWVariable<float> m_flNextPrimaryAttack;
 
 	private:
-		uint32_t m_base_combat_weapon_addr = 0;
+		uint32_t m_address = 0;
 	};
 } // namespace sdk

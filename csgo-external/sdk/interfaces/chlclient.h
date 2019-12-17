@@ -1,6 +1,9 @@
 #pragma once
 
+#include "../common.h"
+
 #include <stdint.h>
+#include <epic/read_write_variable.h>
 
 
 namespace sdk {
@@ -11,11 +14,11 @@ namespace sdk {
 		explicit CHLClient(const uint32_t address) noexcept : m_address(address) {}
 
 		// get the underlying address
-		constexpr operator uint32_t() const noexcept { return this->m_address; }
+		uint32_t chlclient() const noexcept { return this->m_address; }
 
 	public:
 		// get the head of the linked list of client classes
-		uint32_t get_all_classes() const;
+		mango::RWVariable<ClientClass> get_all_classes() const;
 
 	private:
 		uint32_t m_address = 0;

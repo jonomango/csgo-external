@@ -5,22 +5,21 @@
 
 
 namespace config {
+	// only used to lower compile times
+	void setup();
+
 	namespace glow {
-		inline bool teammate_enabled = true,
-			enemy_enabled = true;
-		inline mango::rgbaf teammate_color = { 0.f, 1.f, 1.f, 0.6f },
-			enemy_color = { 1.f, 0.f, 0.f, 0.6f };
+		inline bool teammate_enabled, enemy_enabled;
+		inline mango::rgbaf teammate_color, enemy_color;
 	} // namespace glow
 	namespace misc {
-		inline bool radar_enabled = true,
-			noflash_enabled = true;
-		inline mango::rgbaf nightmode_color = mango::rgbaf(0.05f);
+		inline bool radar_enabled, noflash_enabled;
+		inline mango::rgbaf nightmode_color;
 	} // namespace misc
 	namespace aimbot {
-		inline float accuracy_threshold = 0.015f;
+		inline float accuracy_threshold;
 	} // namespace aimbot
 	namespace models {
-		inline std::string player = enc_str("models/player/custom_player/legacy/ctm_st6_variante.mdl"),
-			knife = enc_str("models/weapons/v_knife_butterfly.mdl");
+		inline std::string player, knife;
 	} // namespace models
 } // namespace config

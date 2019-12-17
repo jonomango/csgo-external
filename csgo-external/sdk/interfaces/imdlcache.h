@@ -15,7 +15,7 @@ namespace sdk {
 		explicit IMDLCache(const uint32_t address) noexcept;
 
 		// get the underlying address
-		constexpr operator uint32_t() const noexcept { return this->m_address; }
+		uint32_t imdlcache() const noexcept { return this->m_address; }
 
 	public:
 		mango::RWVariable<CUtlMap> m_MDLDict;

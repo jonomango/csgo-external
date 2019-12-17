@@ -10,7 +10,7 @@ namespace sdk {
 		explicit C_CSPlayer(const uint32_t address) noexcept;
 
 		// get the underlying address
-		uint32_t get_csplayer_addr() const { return this->m_csplayer_addr; }
+		uint32_t ccsplayer() const noexcept { return this->m_address; }
 
 	public:
 		mango::RWVariable<bool> m_bGunGameImmunity;
@@ -19,6 +19,6 @@ namespace sdk {
 		mango::RWVariable<int> m_iGlowIndex;
 
 	private:
-		uint32_t m_csplayer_addr = 0;
+		uint32_t m_address = 0;
 	};
 } // namespace sdk

@@ -11,7 +11,7 @@ namespace sdk {
 		explicit IEngineTrace(const uint32_t address) noexcept : m_address(address) {}
 
 		// get the underlying address
-		constexpr operator uint32_t() const noexcept { return this->m_address; }
+		uint32_t ienginetrace() const noexcept { return this->m_address; }
 
 	private:
 		uint32_t m_address = 0;

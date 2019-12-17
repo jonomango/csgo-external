@@ -13,13 +13,13 @@ namespace sdk {
 		explicit C_BaseCombatCharacter(const uint32_t address) noexcept;
 
 		// get the underlying address
-		uint32_t get_base_combat_character_addr() const { return this->m_base_combat_character_addr; }
+		uint32_t cbasecombatcharacter() const noexcept { return this->m_address; }
 
 	public:
-		mango::RWVariable<uint32_t> m_hActiveWeapon;
-		mango::RWVariable<std::array<uint32_t, 64>> m_hMyWeapons;
+		mango::RWVariable<CBaseHandle> m_hActiveWeapon;
+		mango::RWVariable<std::array<CBaseHandle, 64>> m_hMyWeapons;
 
 	private:
-		uint32_t m_base_combat_character_addr = 0;
+		uint32_t m_address = 0;
 	};
 } // namespace sdk

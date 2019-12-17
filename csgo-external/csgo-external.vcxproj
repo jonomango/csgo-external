@@ -154,6 +154,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="config.cpp" />
     <ClCompile Include="features\glow.cpp" />
     <ClCompile Include="features\modelchanger.cpp" />
     <ClCompile Include="features\nightmode.cpp" />
@@ -198,6 +199,7 @@
     <ClInclude Include="sdk\classes\c_baseanimating.h" />
     <ClInclude Include="sdk\classes\c_basecombatweapon.h" />
     <ClInclude Include="sdk\classes\c_baseentity.h" />
+    <ClInclude Include="sdk\classes\iclientmode.h" />
     <ClInclude Include="sdk\interfaces\chlclient.h" />
     <ClInclude Include="sdk\classes\c_econentity.h" />
     <ClInclude Include="sdk\classes\c_weaponcsbase.h" />

@@ -18,7 +18,7 @@ namespace sdk {
 		explicit C_BaseEntity(const uint32_t address) noexcept;
 
 		// get the underlying address
-		uint32_t get_base_entity_addr() const { return this->m_base_entity_addr; }
+		uint32_t cbaseentity() const noexcept { return this->m_address; }
 
 	public:
 		mango::RWVariable<bool> m_bSpotted;
@@ -26,6 +26,6 @@ namespace sdk {
 		mango::RWVariable<mango::Vec3f> m_vecOrigin;
 
 	private:
-		uint32_t m_base_entity_addr = 0;
+		uint32_t m_address = 0;
 	};
 } // namespace sdk

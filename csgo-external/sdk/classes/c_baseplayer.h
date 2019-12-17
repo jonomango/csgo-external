@@ -11,7 +11,7 @@ namespace sdk {
 		explicit C_BasePlayer(const uint32_t address) noexcept;
 
 		// get the underlying address
-		uint32_t get_base_player_addr() const { return this->m_base_player_addr; }
+		uint32_t cbaseplayer() const noexcept { return this->m_address; }
 
 	public:
 		mango::RWVariable<int> m_iHealth;
@@ -22,6 +22,6 @@ namespace sdk {
 		mango::RWVariable<mango::Vec3f> m_aimPunchAngle;
 
 	private:
-		uint32_t m_base_player_addr = 0;
+		uint32_t m_address = 0;
 	};
 } // namespace sdk

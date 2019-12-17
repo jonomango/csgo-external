@@ -15,7 +15,7 @@ namespace sdk {
 		CGlowObjectManager(const uint32_t address) noexcept;
 
 		// get the underlying address
-		operator uint32_t() const noexcept { return this->m_address; }
+		uint32_t cglowobjectmanager() const noexcept { return this->m_address; }
 
 	public:
 		mango::RWVariable<CUtlVector<GlowObject>> m_GlowObjectDefinitions;
