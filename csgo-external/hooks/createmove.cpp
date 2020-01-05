@@ -633,7 +633,7 @@ namespace hooks {
 			// [ebp - 0x04] = bone matrix
 			"\x8B\x5D\x08",							// mov ebx, [ebp + 0x08] (entity)
 			"\x8B\x9B", uint32_t(					// mov ebx, [ebx + m_pBones]
-				offsets::m_BoneAccessor + offsetof(BoneAccessor, m_pBones)),
+				offsets::m_BoneAccessor + offsetof(CBoneAccessor, m_pBones)),
 			"\x01\xC3",								// add ebx, eax
 			"\x89\x5D\xFC",							// mov [ebp - 0x04], ebx (matrix)
 

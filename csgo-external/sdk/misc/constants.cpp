@@ -83,7 +83,7 @@ namespace sdk {
 		// not my favorite method but it works
 		if (const auto command_addr = interfaces::engine_cvar.find_command(enc_str("cl_fullupdate"))) {
 			const auto command = globals::process.read<ConCommand>(command_addr);
-			offsets::m_nDeltaTick = globals::process.read<uint32_t>(command.m_command_callback + 0x17);
+			offsets::m_nDeltaTick = globals::process.read<uint32_t>(command.m_fnCommandCallback + 0x17);
 		}
 
 		// get client state address from the mov operand
@@ -123,6 +123,7 @@ namespace sdk {
 		offsets::m_iTeamNum = netvar_cache.get<Fnv1a<uint64_t>("DT_BaseEntity:m_iTeamNum")>();
 		offsets::m_vecOrigin = netvar_cache.get<Fnv1a<uint64_t>("DT_BaseEntity:m_vecOrigin")>();
 		offsets::m_nModelIndex = netvar_cache.get<Fnv1a<uint64_t>("DT_BaseEntity:m_nModelIndex")>();
+		offsets::m_fEffects = netvar_cache.get<Fnv1a<uint64_t>("DT_BaseEntity:m_fEffects")>();
 
 		// C_BaseCombatCharacter
 		offsets::m_hActiveWeapon = netvar_cache.get<Fnv1a<uint64_t>("DT_BaseCombatCharacter:m_hActiveWeapon")>();

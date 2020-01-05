@@ -15,11 +15,8 @@ namespace features::modelchanger {
 		const auto localplayer = interfaces::client_entity_list.get_local_player();
 
 		// model changer
-		if (const auto new_model = globals::model_loader.get_model_for_name(modelname)) {
-			// override our model's mdl_handle with our desired model's mdl_handle
-			globals::process.write<MDLHandle_t>(&localplayer.get_model() +
-				offsetof(model_t, studio), new_model().studio);
-		}
+		if (const auto new_model = globals::model_loader.get_model_for_name(modelname))
+			localplayer.set_model_pointer(new_model);
 	}
 
 	// knife model changer
@@ -51,10 +48,8 @@ namespace features::modelchanger {
 			if (!new_model)
 				break;
 
-			// override our model's mdl_handle with our desired model's mdl handle
-			globals::process.write<MDLHandle_t>(uint32_t(&model) +
-				offsetof(model_t, studio), new_model().studio);
-
+			weapon.set_model_pointer(new_model);
+			
 			// you can't have two knives dummy
 			break;
 		}

@@ -17,7 +17,7 @@ namespace sdk {
 
 			// read the name
 			char command_name[128];
-			globals::process.read(command.m_name, command_name, sizeof(command_name));
+			globals::process.read(command.m_pszName, command_name, sizeof(command_name));
 			command_name[127] = '\0';
 
 			// matching name
@@ -25,7 +25,7 @@ namespace sdk {
 				return command_addr;
 
 			// proceed to next one
-			command_addr = command.m_next;
+			command_addr = command.m_pNext;
 		}
 
 		return 0;

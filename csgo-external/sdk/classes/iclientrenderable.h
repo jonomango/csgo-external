@@ -21,6 +21,9 @@ namespace sdk {
 		// https://github.com/ValveSoftware/source-sdk-2013/blob/master/mp/src/public/iclientrenderable.h#L86
 		mango::RWVariable<model_t> get_model() const;
 
+		// https://github.com/ValveSoftware/source-sdk-2013/blob/master/mp/src/public/iclientrenderable.h#L147
+		mango::RWVariable<ModelInstanceHandle_t> get_model_instance() const;
+
 	private:
 		uint32_t m_address = 0;
 	};

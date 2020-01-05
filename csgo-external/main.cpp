@@ -95,7 +95,7 @@ void release_cheat() {
 // where the juice is
 void run_cheat() {
 	using namespace sdk;
-
+	
 	while (!GetAsyncKeyState(VK_INSERT)) {
 		if (!interfaces::engine_client.is_in_game()) {
 			std::this_thread::sleep_for(std::chrono::milliseconds(100));
@@ -113,9 +113,9 @@ void run_cheat() {
 		globals::client_state.force_full_update();
 		std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
-		mango::logger.info(std::hex, globals::client_mode.iclientmode());
+		mango::logger.info(std::hex, mango::find_pattern(globals::process, "client_panorama.dll", "E8 ? ? ? ? A1 ? ? ? ? FF 05 ? ? ? ?"));
 
-		// we're in game, lets do some shib
+		// we're in-game, lets do some shib
 		while (interfaces::engine_client.is_in_game()) {
 			if (GetAsyncKeyState(VK_INSERT))
 				return;

@@ -17,7 +17,7 @@ namespace sdk {
 
 	public:
 		mango::RWVariable<int> m_nSequence;
-		mango::RWVariable<BoneAccessor> m_BoneAccessor;
+		mango::RWVariable<CBoneAccessor> m_BoneAccessor;
 		mango::RWVariable<std::array<float, 24>> m_flPoseParameter;
 
 		// https://github.com/FWGS/source-sdk-2013-tegra/blob/master/sp/src/game/client/c_baseanimating.h#L174

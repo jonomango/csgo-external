@@ -74,6 +74,7 @@ namespace sdk {
 		inline uint32_t m_hMyWeapons;
 		inline uint32_t m_nSequence;
 		inline uint32_t m_flPoseParameter;
+		inline uint32_t m_fEffects;
 
 		// datamap fields
 		inline uint32_t pl; // https://github.com/ValveSoftware/source-sdk-2013/blob/master/mp/src/public/PlayerState.h
@@ -106,13 +107,13 @@ namespace sdk {
 		constexpr inline uint32_t trace_ray = 5;
 
 		// IClientMode
-		constexpr inline uint32_t do_post_screen_space_effects = 44;
-		constexpr inline uint32_t should_draw_crosshair = 28;
-		constexpr inline uint32_t should_draw_viewModel = 27;
 		constexpr inline uint32_t should_draw_particles = 16;
-		constexpr inline uint32_t get_view_model_fov = 35;
 		constexpr inline uint32_t should_draw_fog = 17;
 		constexpr inline uint32_t create_move = 24;
+		constexpr inline uint32_t should_draw_view_model = 27;
+		constexpr inline uint32_t should_draw_crosshair = 28;
+		constexpr inline uint32_t get_view_model_fov = 35;
+		constexpr inline uint32_t do_post_screen_space_effects = 44;
 
 		// IMaterialSystem
 		constexpr inline uint32_t get_num_materials = 90;

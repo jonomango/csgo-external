@@ -23,7 +23,11 @@ namespace sdk {
 	public:
 		mango::RWVariable<bool> m_bSpotted;
 		mango::RWVariable<int> m_iTeamNum;
+		mango::RWVariable<int> m_fEffects;
 		mango::RWVariable<mango::Vec3f> m_vecOrigin;
+
+		// https://github.com/ValveSoftware/source-sdk-2013/blob/master/mp/src/game/client/c_baseentity.h#L1049
+		void set_model_pointer(const mango::RWVariable<model_t> new_model) const;
 
 	private:
 		uint32_t m_address = 0;

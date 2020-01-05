@@ -6,11 +6,6 @@
 #include <thread>
 
 
-
-
-#include <epic/shellcode.h>
-
-
 namespace hooks {
 	// hook stuff and shibble
 	void hook() {
@@ -18,13 +13,6 @@ namespace hooks {
 
 		// start hookin!
 		hook_createmove();
-
-		static constexpr auto ShouldDrawParticles = 16;
-		static constexpr auto ShouldDrawFog = 17;
-		static constexpr auto ShouldDrawViewModel = 27;
-		static constexpr auto ShouldDrawCrosshair = 28;
-		static constexpr auto ShouldDrawCrosshair = 28;
-		static constexpr auto GetViewModelFOV = 35;
 	}
 
 	// when we're done

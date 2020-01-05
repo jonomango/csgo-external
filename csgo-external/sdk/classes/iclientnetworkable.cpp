@@ -16,8 +16,6 @@ namespace sdk {
 
 	// https://github.com/alliedmodders/hl2sdk/blob/0ef5d3d482157bc0bb3aafd37c08961373f87bfd/public/iclientnetworkable.h#L86
 	bool IClientNetworkable::is_dormant() const {
-		// based off of the C_BaseEntity override of IsDormant()
-
 		// entity not known to the server
 		if (this->entindex() == -1)
 			return false;
